@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rushikesh Wagh — Data Analyst</title>
+    <meta name="description" content="Portfolio of Rushikesh Wagh — Data Analyst with 3+ years turning data into actionable insights." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-container">
+            <a href="#hero" class="nav-logo">RW<span class="accent">.</span></a>
+            <div class="nav-links">
+                <a href="#about">About</a>
+                <a href="#projects">Projects</a>
+                <a href="#journey">Journey</a>
+                <a href="#skills">Skills</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <div class="nav-mobile" id="nav-mobile">
+            <a href="#about">About</a>
+            <a href="#projects">Projects</a>
+            <a href="#journey">Journey</a>
+            <a href="#skills">Skills</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="container hero-content">
+            <p class="hero-greeting fade-up">Hi, I'm</p>
+            <h1 class="hero-name fade-up delay-1">Rushikesh Wagh</h1>
+            <p class="hero-title fade-up delay-2">Data Analyst &amp; Insight Builder</p>
+            <p class="hero-desc fade-up delay-3">
+                3+ years turning raw data into decisions that move the needle.
+                <br />I build analytics pipelines, predictive models, and dashboards that stakeholders actually use.
+            </p>
+            <div class="hero-cta fade-up delay-4">
+                <a href="#projects" class="btn btn-primary">View My Work</a>
+                <a href="https://www.linkedin.com/in/rushikesh-wagh-08031999" target="_blank" class="btn btn-outline">Let's Connect</a>
+            </div>
+        </div>
+        <div class="scroll-indicator fade-up delay-4">
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="section" id="about">
+        <div class="container">
+            <h2 class="section-title reveal">About Me</h2>
+            <div class="about-grid">
+                <div class="about-text reveal">
+                    <p>
+                        I'm a <strong>data analyst</strong> based in Aurangabad, Maharashtra with a passion for uncovering the stories hidden in data. Over the past 3+ years, I've worked across the analytics domain — from writing SQL queries that answer critical business questions to building ML models that predict customer behavior.
+                    </p>
+                    <p>
+                        What sets me apart: I don't just build charts. Every analysis I deliver ties back to a <strong>concrete business action</strong>. "Customers on month-to-month contracts churn 3x more" isn't just a finding — it's a trigger to redesign the pricing page.
+                    </p>
+                    <p>
+                        Currently, I'm building open-source analytics projects to sharpen my skills in machine learning, interactive dashboards, and data storytelling.
+                    </p>
+                </div>
+                <div class="about-stats reveal">
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="3">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Years Experience</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="3">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Open Source Projects</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="10">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Datasets Analyzed</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="100">0</span><span class="stat-suffix">%</span>
+                        <span class="stat-label">Business-First Approach</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects -->
+    <section class="section section-alt" id="projects">
+        <div class="container">
+            <h2 class="section-title reveal">Featured Projects</h2>
+            <p class="section-subtitle reveal">Each project is built to answer a real business question — not just demonstrate code.</p>
+
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <article class="project-card reveal">
+                    <div class="project-header">
+                        <div class="project-icon">📊</div>
+                        <div class="project-links">
+                            <a href="https://github.com/RUSHIKESHWAGH99/Sales-Revenue-Dashboard" target="_blank" title="View on GitHub">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                    <h3 class="project-title">Sales & Revenue Dashboard</h3>
+                    <p class="project-desc">Interactive Streamlit dashboard on the Superstore dataset with KPI cards, trend charts, discount-vs-profit analysis, and real-time filters. Surfaces key insights like "discounts above 20% destroy margins."</p>
+                    <div class="project-tags">
+                        <span>Streamlit</span><span>Plotly</span><span>pandas</span><span>Python</span>
+                    </div>
+                    <div class="project-insight">
+                        <strong>Key insight:</strong> Sub-categories with >20% avg discount have negative profit margins
+                    </div>
+                </article>
+
+                <!-- Project 2 -->
+                <article class="project-card reveal">
+                    <div class="project-header">
+                        <div class="project-icon">🔮</div>
+                        <div class="project-links">
+                            <a href="https://github.com/RUSHIKESHWAGH99/Telco-Customer-Churn-Prediction" target="_blank" title="View on GitHub">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                    <h3 class="project-title">Telco Customer Churn Prediction</h3>
+                    <p class="project-desc">ML pipeline predicting customer churn using Logistic Regression & Random Forest. Goes beyond accuracy — surfaces the top reasons customers leave and concrete retention actions.</p>
+                    <div class="project-tags">
+                        <span>scikit-learn</span><span>pandas</span><span>seaborn</span><span>Python</span>
+                    </div>
+                    <div class="project-insight">
+                        <strong>Key insight:</strong> Month-to-month contracts churn 3x more — push annual plans with incentives
+                    </div>
+                </article>
+
+                <!-- Project 3 -->
+                <article class="project-card reveal">
+                    <div class="project-header">
+                        <div class="project-icon">🛒</div>
+                        <div class="project-links">
+                            <a href="https://github.com/RUSHIKESHWAGH99/E-Commerce-Sales-Analysis" target="_blank" title="View on GitHub">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                    <h3 class="project-title">E-Commerce Sales Analysis</h3>
+                    <p class="project-desc">Customer & Revenue Intelligence Report — deep-dive into an e-commerce dataset with segmentation, revenue driver identification, and actionable growth recommendations.</p>
+                    <div class="project-tags">
+                        <span>pandas</span><span>matplotlib</span><span>HTML</span><span>Python</span>
+                    </div>
+                    <div class="project-insight">
+                        <strong>Key insight:</strong> Revenue concentration analysis reveals top customer segments driving 80% of sales
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Journey -->
+    <section class="section" id="journey">
+        <div class="container">
+            <h2 class="section-title reveal">My Journey</h2>
+            <p class="section-subtitle reveal">From SQL queries to ML models — every step has been about getting closer to the "why" behind the data.</p>
+
+            <div class="timeline">
+                <div class="timeline-item reveal">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-year">2021</span>
+                        <h3>The Foundation</h3>
+                        <p>Started as a data analyst. Learned SQL, Excel, and the most important skill — asking the right questions before writing a single query.</p>
+                    </div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-year">2022</span>
+                        <h3>Python & Automation</h3>
+                        <p>Moved into Python-based analytics — pandas, matplotlib, automated reporting. Replaced 4-hour manual Excel processes with scripts that ran in seconds.</p>
+                    </div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-year">2023</span>
+                        <h3>End-to-End Pipelines</h3>
+                        <p>Built complete data pipelines — from ingestion to dashboards. Started thinking in systems, not just scripts. First exposure to machine learning.</p>
+                    </div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-year">2024</span>
+                        <h3>Machine Learning</h3>
+                        <p>Deepened ML skills — predictive modeling, feature engineering, scikit-learn. Learned that a model's value isn't its accuracy, it's the business action it enables.</p>
+                    </div>
+                </div>
+                <div class="timeline-item reveal">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-year">2025–26</span>
+                        <h3>Building in Public</h3>
+                        <p>Open-source portfolio projects — interactive dashboards (Streamlit + Plotly), churn prediction models, and revenue analysis. Combining analytics + ML + storytelling.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills -->
+    <section class="section section-alt" id="skills">
+        <div class="container">
+            <h2 class="section-title reveal">Skills & Tools</h2>
+            <div class="skills-grid">
+                <div class="skill-category reveal">
+                    <h3>Languages</h3>
+                    <div class="skill-items">
+                        <div class="skill-item"><span class="skill-dot"></span>Python</div>
+                        <div class="skill-item"><span class="skill-dot"></span>SQL</div>
+                    </div>
+                </div>
+                <div class="skill-category reveal">
+                    <h3>Data & ML</h3>
+                    <div class="skill-items">
+                        <div class="skill-item"><span class="skill-dot"></span>pandas</div>
+                        <div class="skill-item"><span class="skill-dot"></span>NumPy</div>
+                        <div class="skill-item"><span class="skill-dot"></span>scikit-learn</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Matplotlib</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Seaborn</div>
+                    </div>
+                </div>
+                <div class="skill-category reveal">
+                    <h3>Dashboards</h3>
+                    <div class="skill-items">
+                        <div class="skill-item"><span class="skill-dot"></span>Streamlit</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Plotly</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Power BI</div>
+                    </div>
+                </div>
+                <div class="skill-category reveal">
+                    <h3>Tools & Infra</h3>
+                    <div class="skill-items">
+                        <div class="skill-item"><span class="skill-dot"></span>Git & GitHub</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Docker</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Jupyter</div>
+                        <div class="skill-item"><span class="skill-dot"></span>VS Code / Cursor</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section" id="contact">
+        <div class="container contact-container">
+            <h2 class="section-title reveal">Get in Touch</h2>
+            <p class="section-subtitle reveal">
+                I'm always open to discussing data problems, analytics roles, or collaboration opportunities.
+            </p>
+            <div class="contact-links reveal">
+                <a href="https://www.linkedin.com/in/rushikesh-wagh-08031999" target="_blank" class="contact-card">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    <span>LinkedIn</span>
+                </a>
+                <a href="https://github.com/RUSHIKESHWAGH99" target="_blank" class="contact-card">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                    <span>GitHub</span>
+                </a>
+                <a href="mailto:rushikeshwagh99@gmail.com" class="contact-card">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <span>Email</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Built by Rushikesh Wagh &middot; 2026</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
