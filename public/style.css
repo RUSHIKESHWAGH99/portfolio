@@ -259,6 +259,33 @@ body {
 }
 .timeline-content h3 { font-size: 1.1rem; font-weight: 700; margin: 4px 0 8px; }
 .timeline-content p { color: var(--text-dim); font-size: 0.95rem; }
+.timeline-location {
+    font-size: 0.85rem; color: var(--text-dim); opacity: 0.7;
+    margin-bottom: 8px !important;
+}
+.timeline-highlights {
+    list-style: none; padding: 0; margin: 8px 0 0 0;
+}
+.timeline-highlights li {
+    color: var(--text-dim); font-size: 0.93rem; padding: 4px 0 4px 16px;
+    position: relative;
+}
+.timeline-highlights li::before {
+    content: '▸'; position: absolute; left: 0; color: var(--accent-2);
+}
+.timeline-highlights strong { color: var(--text); }
+.timeline-awards {
+    margin-top: 10px; padding: 8px 12px; background: rgba(108, 99, 255, 0.08);
+    border-radius: 6px; font-size: 0.85rem; color: var(--accent);
+}
+.timeline-marker.active {
+    background: var(--accent-2); box-shadow: 0 0 0 3px var(--accent-2);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--accent-2); }
+    50% { box-shadow: 0 0 0 6px rgba(0, 212, 170, 0.3); }
+}
 
 /* ── Skills ────────────────────────────────────────────────── */
 .skills-grid {
