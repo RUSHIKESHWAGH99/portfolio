@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rushikesh Wagh — Product Analyst</title>
-    <meta name="description" content="Portfolio of Rushikesh Wagh — Product Analyst with 4+ years turning data into actionable insights that drive product growth." />
+    <meta name="description" content="Portfolio of Rushikesh Wagh — Product Analyst &amp; data science practitioner with 4+ years in analytics, ML, and product metrics." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -17,6 +17,7 @@
             <a href="#hero" class="nav-logo">RW<span class="accent">.</span></a>
             <div class="nav-links">
                 <a href="#about">About</a>
+                <a href="#approach">Approach</a>
                 <a href="#experience">Experience</a>
                 <a href="#projects">Projects</a>
                 <a href="#skills">Skills</a>
@@ -28,6 +29,7 @@
         </div>
         <div class="nav-mobile" id="nav-mobile">
             <a href="#about">About</a>
+            <a href="#approach">Approach</a>
             <a href="#experience">Experience</a>
             <a href="#projects">Projects</a>
             <a href="#skills">Skills</a>
@@ -38,20 +40,65 @@
     <!-- Hero -->
     <section class="hero" id="hero">
         <div class="hero-bg-grid"></div>
-        <div class="container hero-content">
-            <p class="hero-greeting fade-up">Hi, I'm</p>
-            <h1 class="hero-name fade-up delay-1">Rushikesh Wagh</h1>
-            <p class="hero-title fade-up delay-2">Product Analyst &amp; Data Strategist</p>
-            <p class="hero-desc fade-up delay-3">
-                4+ years turning data into actionable insights that drive product growth and improve customer experience.
-                <br />My work sits at the intersection of product strategy, engineering, and business problem-solving.
-            </p>
-            <div class="hero-cta fade-up delay-4">
-                <a href="#experience" class="btn btn-primary">View My Work</a>
-                <a href="https://www.linkedin.com/in/rushikesh-wagh-08031999" target="_blank" class="btn btn-outline">Let's Connect</a>
+        <div class="container hero-layout">
+            <div class="hero-content fade-up">
+                <p class="hero-greeting">Hi, I'm</p>
+                <h1 class="hero-name">Rushikesh Wagh</h1>
+                <p class="hero-title">Product Analyst · Analytics &amp; Data Science</p>
+                <p class="hero-pills" aria-label="Focus areas">
+                    <span class="hero-pill">EDA</span>
+                    <span class="hero-pill">ML</span>
+                    <span class="hero-pill">Metrics &amp; KPIs</span>
+                    <span class="hero-pill">Experimentation</span>
+                </p>
+                <p class="hero-desc">
+                    4+ years turning raw data into models, dashboards, and decisions that move product and revenue.
+                    From funnel diagnostics to churn and fraud models — I care about the <strong>so what</strong> for the business.
+                </p>
+                <div class="hero-cta">
+                    <a href="#projects" class="btn btn-primary">See Projects</a>
+                    <a href="https://github.com/RUSHIKESHWAGH99" target="_blank" class="btn btn-outline">GitHub</a>
+                    <a href="https://www.linkedin.com/in/rushikesh-wagh-08031999" target="_blank" class="btn btn-outline">LinkedIn</a>
+                </div>
             </div>
+            <aside class="hero-visual reveal" aria-hidden="true">
+                <div class="mini-dashboard">
+                    <div class="mini-dash-header">
+                        <span class="mini-dash-dot"></span>
+                        <span class="mini-dash-dot"></span>
+                        <span class="mini-dash-dot"></span>
+                        <span class="mini-dash-title">analytics_snapshot.py</span>
+                    </div>
+                    <div class="mini-dash-kpis">
+                        <div class="mini-kpi">
+                            <span class="mini-kpi-label">ROC-AUC</span>
+                            <span class="mini-kpi-value">0.94</span>
+                        </div>
+                        <div class="mini-kpi">
+                            <span class="mini-kpi-label">Recall</span>
+                            <span class="mini-kpi-value">0.87</span>
+                        </div>
+                        <div class="mini-kpi">
+                            <span class="mini-kpi-label">Lift @10%</span>
+                            <span class="mini-kpi-value">3.2×</span>
+                        </div>
+                    </div>
+                    <div class="mini-dash-chart">
+                        <span class="mini-chart-label">feature_importance (top)</span>
+                        <div class="mini-bars">
+                            <div class="mini-bar" style="--h: 88%"></div>
+                            <div class="mini-bar" style="--h: 72%"></div>
+                            <div class="mini-bar" style="--h: 56%"></div>
+                            <div class="mini-bar" style="--h: 41%"></div>
+                            <div class="mini-bar" style="--h: 28%"></div>
+                            <div class="mini-bar" style="--h: 19%"></div>
+                        </div>
+                    </div>
+                    <p class="mini-dash-footnote">Illustrative — real numbers live in repo READMEs &amp; notebooks</p>
+                </div>
+            </aside>
         </div>
-        <div class="scroll-indicator fade-up delay-4">
+        <div class="scroll-indicator">
             <div class="scroll-line"></div>
         </div>
     </section>
@@ -94,8 +141,67 @@
         </div>
     </section>
 
+    <!-- How I work (analytics workflow) -->
+    <section class="section section-alt" id="approach">
+        <div class="container">
+            <h2 class="section-title reveal">How I Work</h2>
+            <p class="section-subtitle reveal">An end-to-end analytics loop — the same rhythm behind my portfolio repos and my product work.</p>
+            <ol class="approach-steps">
+                <li class="approach-step reveal">
+                    <span class="approach-num">01</span>
+                    <h3>Frame the decision</h3>
+                    <p>Clarify the business question, success metric, and trade-offs (e.g. precision vs recall for fraud).</p>
+                </li>
+                <li class="approach-step reveal">
+                    <span class="approach-num">02</span>
+                    <h3>Data &amp; quality</h3>
+                    <p>Source tables, validate joins, handle missing values, and sanity-check distributions before modeling.</p>
+                </li>
+                <li class="approach-step reveal">
+                    <span class="approach-num">03</span>
+                    <h3>EDA &amp; hypotheses</h3>
+                    <p>Visualize segments, correlations, and leakage risks; turn patterns into testable hypotheses.</p>
+                </li>
+                <li class="approach-step reveal">
+                    <span class="approach-num">04</span>
+                    <h3>Model or metric logic</h3>
+                    <p>Baselines first, then sklearn / XGBoost-style models, with proper splits and imbalance handling when needed.</p>
+                </li>
+                <li class="approach-step reveal">
+                    <span class="approach-num">05</span>
+                    <h3>Evaluate fairly</h3>
+                    <p>Metrics that match the use case — not just accuracy — plus confusion matrices, ROC, and feature importance.</p>
+                </li>
+                <li class="approach-step reveal">
+                    <span class="approach-num">06</span>
+                    <h3>Ship the story</h3>
+                    <p>READMEs, notebooks, or dashboards so stakeholders see the insight and the recommended next action.</p>
+                </li>
+            </ol>
+
+            <div class="focus-grid">
+                <article class="focus-card reveal">
+                    <h3>Exploratory analysis</h3>
+                    <p>Segmentation, trends, and clear charts that explain <em>why</em> a metric moved.</p>
+                </article>
+                <article class="focus-card reveal">
+                    <h3>Predictive modeling</h3>
+                    <p>Classification &amp; regression with scikit-learn — from churn and fraud to cost prediction.</p>
+                </article>
+                <article class="focus-card reveal">
+                    <h3>Imbalanced &amp; risky outcomes</h3>
+                    <p>SMOTE, recall-focused evaluation, and business-aligned thresholds for rare events.</p>
+                </article>
+                <article class="focus-card reveal">
+                    <h3>Dashboards &amp; KPI design</h3>
+                    <p>Streamlit and BI-style views that make metrics self-serve and actionable.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
     <!-- Experience / Journey -->
-    <section class="section section-alt" id="experience">
+    <section class="section" id="experience">
         <div class="container">
             <h2 class="section-title reveal">Experience</h2>
             <p class="section-subtitle reveal">From founder's office strategy roles to product analytics — always at the intersection of data and business impact.</p>
@@ -177,13 +283,14 @@
     </section>
 
     <!-- Projects -->
-    <section class="section" id="projects">
+    <section class="section section-alt" id="projects">
         <div class="container">
             <h2 class="section-title reveal">Open Source Projects</h2>
-            <p class="section-subtitle reveal">Side projects built to sharpen skills and demonstrate end-to-end analytics thinking.</p>
+            <p class="section-subtitle reveal">Public repos with notebooks, EDA, and models — each README summarizes methods, metrics, and business takeaways.</p>
 
             <div class="projects-grid">
                 <article class="project-card reveal">
+                    <span class="project-type">Dashboard · BI</span>
                     <div class="project-header">
                         <div class="project-icon">📊</div>
                         <div class="project-links">
@@ -203,6 +310,7 @@
                 </article>
 
                 <article class="project-card reveal">
+                    <span class="project-type">Classification</span>
                     <div class="project-header">
                         <div class="project-icon">🔮</div>
                         <div class="project-links">
@@ -222,6 +330,7 @@
                 </article>
 
                 <article class="project-card reveal">
+                    <span class="project-type">EDA · Reporting</span>
                     <div class="project-header">
                         <div class="project-icon">🛒</div>
                         <div class="project-links">
@@ -241,6 +350,7 @@
                 </article>
 
                 <article class="project-card reveal">
+                    <span class="project-type">Regression</span>
                     <div class="project-header">
                         <div class="project-icon">🏥</div>
                         <div class="project-links">
@@ -260,6 +370,7 @@
                 </article>
 
                 <article class="project-card reveal">
+                    <span class="project-type">Imbalanced · Classification</span>
                     <div class="project-header">
                         <div class="project-icon">💳</div>
                         <div class="project-links">
@@ -279,6 +390,7 @@
                 </article>
 
                 <article class="project-card reveal">
+                    <span class="project-type">Classification · Education</span>
                     <div class="project-header">
                         <div class="project-icon">🎓</div>
                         <div class="project-links">
@@ -301,7 +413,7 @@
     </section>
 
     <!-- Skills -->
-    <section class="section section-alt" id="skills">
+    <section class="section" id="skills">
         <div class="container">
             <h2 class="section-title reveal">Skills & Tools</h2>
             <div class="skills-grid">
@@ -313,12 +425,23 @@
                     </div>
                 </div>
                 <div class="skill-category reveal">
-                    <h3>Data & ML</h3>
+                    <h3>Data &amp; ML</h3>
                     <div class="skill-items">
                         <div class="skill-item"><span class="skill-dot"></span>pandas / NumPy</div>
                         <div class="skill-item"><span class="skill-dot"></span>scikit-learn</div>
-                        <div class="skill-item"><span class="skill-dot"></span>XGBoost</div>
-                        <div class="skill-item"><span class="skill-dot"></span>Matplotlib / Seaborn</div>
+                        <div class="skill-item"><span class="skill-dot"></span>XGBoost / Gradient boosting</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Imbalanced-learn (SMOTE)</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Feature importance &amp; explainability</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Jupyter / notebooks</div>
+                    </div>
+                </div>
+                <div class="skill-category reveal">
+                    <h3>Analytics craft</h3>
+                    <div class="skill-items">
+                        <div class="skill-item"><span class="skill-dot"></span>EDA &amp; hypothesis testing</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Metrics design (north-star, funnels)</div>
+                        <div class="skill-item"><span class="skill-dot"></span>A/B tests &amp; experiment readouts</div>
+                        <div class="skill-item"><span class="skill-dot"></span>Cohort &amp; retention analysis</div>
                     </div>
                 </div>
                 <div class="skill-category reveal">
@@ -343,11 +466,11 @@
     </section>
 
     <!-- Contact -->
-    <section class="section" id="contact">
+    <section class="section section-alt" id="contact">
         <div class="container contact-container">
             <h2 class="section-title reveal">Get in Touch</h2>
             <p class="section-subtitle reveal">
-                Open to discussing product analytics roles, data problems, or collaboration opportunities.
+                Open to product analytics, analytics engineering, and data science roles — or collaborating on interesting datasets.
             </p>
             <div class="contact-links reveal">
                 <a href="https://www.linkedin.com/in/rushikesh-wagh-08031999" target="_blank" class="contact-card">
@@ -369,7 +492,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>Built by Rushikesh Wagh &middot; 2026</p>
+            <p>Built by Rushikesh Wagh &middot; Static site (HTML, CSS, JS) &middot; 2026</p>
         </div>
     </footer>
 
