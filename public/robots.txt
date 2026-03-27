@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://portfolio-three-gilt-nasms1nt6q.vercel.app/sitemap.xml
