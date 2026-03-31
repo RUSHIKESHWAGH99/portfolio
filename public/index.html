@@ -6,7 +6,7 @@
     <!-- Canonical & social URLs: primary site is rushikeshwagh.vercel.app -->
     <link rel="canonical" href="https://rushikeshwagh.vercel.app/" />
     <title>Rushikesh Wagh — Product Analyst &amp; Data Science Portfolio | Bengaluru</title>
-    <meta name="description" content="Rushikesh Wagh — Product Analyst in Bengaluru (IIT ISM Dhanbad). Portfolio: analytics, ML, EDA, dashboards, churn &amp; fraud models. GitHub projects, experience at ALLEN Digital, Dunzo, FloBiz." />
+    <meta name="description" content="Rushikesh Wagh — Product Analyst in Bengaluru (IIT ISM Dhanbad). Portfolio, journey, free analytics tools (A/B calculator, cohort CSV, SQL formatter). GitHub projects, ALLEN Digital, Dunzo, FloBiz." />
     <meta name="author" content="Rushikesh Wagh" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="googlebot" content="index, follow" />
@@ -82,29 +82,39 @@
     <!-- Navigation -->
     <nav class="nav" id="nav">
         <div class="nav-container">
-            <a href="#hero" class="nav-logo">RW<span class="accent">.</span></a>
+            <a href="#home" class="nav-logo" data-view="home">RW<span class="accent">.</span></a>
             <div class="nav-links">
-                <a href="#about">About</a>
-                <a href="#approach">Approach</a>
-                <a href="#experience">Experience</a>
-                <a href="#projects">Projects</a>
-                <a href="#skills">Skills</a>
-                <a href="#contact">Contact</a>
+                <a href="#home" data-view="home">Home</a>
+                <a href="#journey" data-view="journey">Journey</a>
+                <a href="#tools" data-view="tools">Tools</a>
+                <a href="#projects" data-view="projects">Projects</a>
+                <a href="#skills" data-view="skills">Skills</a>
             </div>
-            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" type="button">
                 <span></span><span></span><span></span>
             </button>
         </div>
         <div class="nav-mobile" id="nav-mobile">
-            <a href="#about">About</a>
-            <a href="#approach">Approach</a>
-            <a href="#experience">Experience</a>
-            <a href="#projects">Projects</a>
-            <a href="#skills">Skills</a>
-            <a href="#contact">Contact</a>
+            <a href="#home" data-view="home">Home</a>
+            <a href="#journey" data-view="journey">Journey</a>
+            <a href="#tools" data-view="tools">Tools</a>
+            <a href="#projects" data-view="projects">Projects</a>
+            <a href="#skills" data-view="skills">Skills</a>
         </div>
     </nav>
 
+    <div class="site-tabs">
+        <div class="container site-tabs-inner" role="tablist" aria-label="Portfolio sections">
+            <button type="button" class="site-tab active" role="tab" aria-selected="true" data-view="home" id="tab-home">Home</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="journey" id="tab-journey">Journey</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="tools" id="tab-tools">Tools</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="projects" id="tab-projects">Projects</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="skills" id="tab-skills">Skills &amp; contact</button>
+        </div>
+    </div>
+
+    <main class="main-views">
+    <div id="view-home" class="view-panel">
     <!-- Hero -->
     <section class="hero" id="hero">
         <div class="hero-bg-grid"></div>
@@ -124,7 +134,8 @@
                     From funnel diagnostics to churn and fraud models — I care about the <strong>so what</strong> for the business.
                 </p>
                 <div class="hero-cta">
-                    <a href="#projects" class="btn btn-primary">See Projects</a>
+                    <a href="#tools" class="btn btn-primary" data-view="tools">Free tools</a>
+                    <a href="#projects" class="btn btn-outline" data-view="projects">Projects</a>
                     <a href="https://github.com/RUSHIKESHWAGH99" target="_blank" class="btn btn-outline">GitHub</a>
                     <a href="https://www.linkedin.com/in/rushikesh-wagh-08031999" target="_blank" class="btn btn-outline">LinkedIn</a>
                 </div>
@@ -171,6 +182,42 @@
         </div>
     </section>
 
+    <section class="home-teaser section section-alt">
+        <div class="container">
+            <h2 class="section-title reveal">At a glance</h2>
+            <div class="about-grid">
+                <div class="about-text reveal">
+                    <p>
+                        I'm a <strong>Product Analyst</strong> in Bengaluru — experimentation, cohorts, ML, and metrics tied to revenue. IIT (ISM) Dhanbad; shipped impact at <strong>ALLEN Digital</strong>, <strong>FloBiz</strong>, and <strong>Dunzo</strong>.
+                    </p>
+                    <p>
+                        Use the tabs above: <strong>Journey</strong> for the full story, <strong>Tools</strong> for free in-browser calculators (no AI, no accounts), and <strong>Projects</strong> for open-source work.
+                    </p>
+                </div>
+                <div class="about-stats reveal">
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="4">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Years Experience</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="4">0</span>
+                        <span class="stat-label">Companies</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="1000">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Datasets Analyzed</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" data-count="10">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Awards Won</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </div>
+
+    <div id="view-journey" class="view-panel" hidden>
     <!-- About -->
     <section class="section" id="about">
         <div class="container">
@@ -349,7 +396,70 @@
             </div>
         </div>
     </section>
+    </div>
 
+    <div id="view-tools" class="view-panel" hidden>
+        <header class="tools-hero">
+            <div class="container">
+                <h2>Free analytics tools</h2>
+                <p>Quick, private utilities that run entirely in your browser — no sign-up, no AI, no server. Useful for experiment readouts, retention tables, and readable SQL.</p>
+                <span class="tools-badge">100% client-side · $0 infra</span>
+            </div>
+        </header>
+        <div class="tool-switcher" role="tablist" aria-label="Choose a tool">
+            <button type="button" class="tool-switch active" data-tool="ab" aria-selected="true">A/B test calculator</button>
+            <button type="button" class="tool-switch" data-tool="cohort" aria-selected="false">Cohort table (CSV)</button>
+            <button type="button" class="tool-switch" data-tool="sql" aria-selected="false">SQL formatter + hints</button>
+        </div>
+        <div class="tool-panels-wrap">
+            <div id="tool-panel-ab" class="tool-panel">
+                <h3>Two-proportion z-test (conversion A vs B)</h3>
+                <p class="tool-hint">Enter visitors and conversions for each variant. Uses a pooled proportion z-test (large-sample normal approximation). For small samples, treat as directional only.</p>
+                <div class="form-grid">
+                    <div class="form-field"><label for="ab-vis-a">Visitors A</label><input id="ab-vis-a" type="number" min="1" value="10000" /></div>
+                    <div class="form-field"><label for="ab-conv-a">Conversions A</label><input id="ab-conv-a" type="number" min="0" value="1200" /></div>
+                    <div class="form-field"><label for="ab-vis-b">Visitors B</label><input id="ab-vis-b" type="number" min="1" value="10000" /></div>
+                    <div class="form-field"><label for="ab-conv-b">Conversions B</label><input id="ab-conv-b" type="number" min="0" value="1270" /></div>
+                    <div class="form-field"><label for="ab-alpha">Significance α (two-sided)</label>
+                        <select id="ab-alpha">
+                            <option value="0.10">90% confidence (α = 0.10)</option>
+                            <option value="0.05" selected>95% confidence (α = 0.05)</option>
+                            <option value="0.01">99% confidence (α = 0.01)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="btn-tool" id="ab-calc">Calculate</button>
+                <div id="ab-out" class="ab-results" hidden></div>
+                <div id="ab-err" class="tool-error" hidden></div>
+            </div>
+            <div id="tool-panel-cohort" class="tool-panel" hidden>
+                <h3>Cohort retention heatmap</h3>
+                <p class="tool-hint"><strong>CSV format (wide):</strong> first column = cohort name; remaining columns = period 0, 1, 2… (counts or retention %). Example header: <code>cohort,0,1,2,3</code>. Values between 0 and 1 are treated as fractions.</p>
+                <label class="file-drop-label">
+                    <input type="file" id="cohort-file" accept=".csv,text/csv" />
+                    Drop a CSV here or tap to choose a file
+                </label>
+                <div id="cohort-err" class="tool-error" hidden></div>
+                <div id="cohort-out"></div>
+            </div>
+            <div id="tool-panel-sql" class="tool-panel" hidden>
+                <h3>SQL formatter + keyword hints</h3>
+                <p class="tool-hint">Formatting is heuristic (keywords on new lines). Hints are static reference blurbs — not AI-generated.</p>
+                <div class="sql-io">
+                    <textarea id="sql-in" spellcheck="false" placeholder="Paste SQL here…">select u.id, o.total from users u join orders o on o.user_id = u.id where o.created_at &gt;= '2024-01-01' group by u.id, o.total order by o.total desc limit 100;</textarea>
+                    <pre id="sql-out" aria-label="Formatted SQL"></pre>
+                </div>
+                <button type="button" class="btn-tool" id="sql-format">Format</button>
+                <button type="button" class="btn-tool secondary" id="sql-copy">Copy formatted</button>
+                <div class="sql-hints-block">
+                    <h4>Keywords detected (reference)</h4>
+                    <ul id="sql-hint-list" class="sql-hints-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-projects" class="view-panel" hidden>
     <!-- Projects -->
     <section class="section section-alt" id="projects">
         <div class="container">
@@ -479,7 +589,9 @@
             </div>
         </div>
     </section>
+    </div>
 
+    <div id="view-skills" class="view-panel" hidden>
     <!-- Skills -->
     <section class="section" id="skills">
         <div class="container">
@@ -556,6 +668,8 @@
             </div>
         </div>
     </section>
+    </div>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
