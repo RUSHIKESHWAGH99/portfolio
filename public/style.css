@@ -860,20 +860,30 @@ body {
 .tool-panel > p.tool-hint { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 20px; line-height: 1.6; }
 
 .form-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px; margin-bottom: 20px;
+    align-items: end;
+}
+.form-field {
+    display: flex; flex-direction: column;
 }
 .form-field label {
     display: block; font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px;
+    min-height: 2.4em; line-height: 1.2;
 }
 .form-field input, .form-field select {
     width: 100%; padding: 10px 12px; border-radius: 8px;
     border: 1px solid var(--border); background: var(--bg); color: var(--text);
     font-family: var(--mono); font-size: 0.9rem;
+    height: 42px;
 }
 .form-field input:focus, .form-field select:focus {
     outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow);
+}
+@media (max-width: 480px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
 }
 
 .btn-tool {
