@@ -662,7 +662,32 @@ function initSampleSize() {
     });
 }
 
-// ── JSON ↔ CSV converter ─────────────────────────────────────
+// ── JSON formatter + CSV download ────────────────────────────
+
+/** Syntax-highlight already-formatted JSON string → HTML. */
+function highlightJson(str) {
+    return str.replace(
+        /("(?:\\.|[^"\\])*")\s*:/g,
+        '<span class="json-key">$1</span>:'
+    ).replace(
+        /:\s*("(?:\\.|[^"\\])*")/g,
+        ': <span class="json-str">$1</span>'
+    ).replace(
+        /:\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/g,
+        ': <span class="json-num">$1</span>'
+    ).replace(
+        /:\s*(true|false)\b/g,
+        ': <span class="json-bool">$1</span>'
+    ).replace(
+        /:\s*(null)\b/g,
+        ': <span class="json-null">$1</span>'
+    ).replace(
+        /^(\s*"(?:\\.|[^"\\])*")(?!:)/gm,
+        '<span class="json-str">$1</span>'
+    );
+}
+
+/** Flatten nested objects using dot-notation keys for CSV export. */
 function flattenObj(obj, prefix) {
     const out = {};
     for (const [k, v] of Object.entries(obj)) {
@@ -676,66 +701,86 @@ function flattenObj(obj, prefix) {
     return out;
 }
 
-function jsonToCsv(arr) {
+function jsonArrayToCsv(arr) {
     const flat = arr.map((row) => flattenObj(row, ""));
     const keys = [...new Set(flat.flatMap(Object.keys))];
-    const escape = (v) => {
+    const esc = (v) => {
         const s = v == null ? "" : String(v);
         return s.includes(",") || s.includes('"') || s.includes("\n")
             ? `"${s.replace(/"/g, '""')}"`
             : s;
     };
-    const lines = [keys.map(escape).join(",")];
+    const lines = [keys.map(esc).join(",")];
     for (const row of flat) {
-        lines.push(keys.map((k) => escape(row[k])).join(","));
+        lines.push(keys.map((k) => esc(row[k])).join(","));
     }
     return lines.join("\n");
 }
 
-function csvToJson(text) {
-    const rows = parseCSV(text);
-    if (rows.length < 2) throw new Error("CSV needs a header + at least one data row.");
-    const header = rows[0];
-    return rows.slice(1).map((row) => {
-        const obj = {};
-        header.forEach((h, i) => {
-            let v = row[i] ?? "";
-            if (v !== "" && !isNaN(Number(v))) v = Number(v);
-            else if (v === "true") v = true;
-            else if (v === "false") v = false;
-            obj[h] = v;
-        });
-        return obj;
-    });
-}
-
-function initJsonCsv() {
-    const ta  = document.getElementById("json-in");
-    const pre = document.getElementById("json-out");
-    const btn = document.getElementById("json-convert");
-    const cpy = document.getElementById("json-copy");
+function initJsonFormatter() {
+    const ta   = document.getElementById("json-in");
+    const pre  = document.getElementById("json-out");
+    const btn  = document.getElementById("json-format");
+    const cpy  = document.getElementById("json-copy");
+    const dl   = document.getElementById("json-csv-dl");
+    const err  = document.getElementById("json-err");
     if (!ta || !pre || !btn) return;
 
-    btn.addEventListener("click", () => {
+    let lastParsed = null;
+
+    function run() {
+        if (err) err.hidden = true;
+        lastParsed = null;
         const raw = ta.value.trim();
-        if (!raw) { pre.textContent = ""; return; }
+        if (!raw) { pre.innerHTML = ""; return; }
         try {
-            if (raw.startsWith("[") || raw.startsWith("{")) {
-                let parsed = JSON.parse(raw);
-                if (!Array.isArray(parsed)) parsed = [parsed];
-                pre.textContent = jsonToCsv(parsed);
-            } else {
-                const json = csvToJson(raw);
-                pre.textContent = JSON.stringify(json, null, 2);
-            }
+            const parsed = JSON.parse(raw);
+            lastParsed = parsed;
+            const formatted = JSON.stringify(parsed, null, 2);
+            pre.innerHTML = highlightJson(escapeHtml(formatted));
         } catch (e) {
-            pre.textContent = `Error: ${e instanceof Error ? e.message : "Could not parse input."}`;
+            pre.innerHTML = "";
+            if (err) {
+                err.textContent = e instanceof Error ? e.message : "Invalid JSON.";
+                err.hidden = false;
+            }
         }
-    });
+    }
+
+    btn.addEventListener("click", run);
 
     if (cpy) {
         cpy.addEventListener("click", async () => {
             try { await navigator.clipboard.writeText(pre.textContent || ""); } catch { /* ignore */ }
+        });
+    }
+
+    if (dl) {
+        dl.addEventListener("click", () => {
+            if (err) err.hidden = true;
+            if (!lastParsed) {
+                run();
+                if (!lastParsed) return;
+            }
+            let arr = lastParsed;
+            if (!Array.isArray(arr)) arr = [arr];
+            if (!arr.length || typeof arr[0] !== "object") {
+                if (err) {
+                    err.textContent = "CSV download requires a JSON array of objects.";
+                    err.hidden = false;
+                }
+                return;
+            }
+            const csv = jsonArrayToCsv(arr);
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "data.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
     }
 }
@@ -793,6 +838,6 @@ initStats();
 initABCalculator();
 initSampleSize();
 initCohortTool();
-initJsonCsv();
+initJsonFormatter();
 initSqlTool();
 initToolSwitcher();

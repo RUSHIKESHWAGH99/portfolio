@@ -453,7 +453,7 @@
             <button type="button" class="tool-switch active" data-tool="ab" aria-selected="true">A/B test calculator</button>
             <button type="button" class="tool-switch" data-tool="sample" aria-selected="false">Sample size</button>
             <button type="button" class="tool-switch" data-tool="cohort" aria-selected="false">Cohort table (CSV)</button>
-            <button type="button" class="tool-switch" data-tool="json" aria-selected="false">JSON &harr; CSV</button>
+            <button type="button" class="tool-switch" data-tool="json" aria-selected="false">JSON formatter</button>
             <button type="button" class="tool-switch" data-tool="sql" aria-selected="false">SQL formatter</button>
         </div>
         <div class="tool-panels-wrap">
@@ -513,14 +513,16 @@
                 <div id="cohort-out"></div>
             </div>
             <div id="tool-panel-json" class="tool-panel" hidden>
-                <h3>JSON &harr; CSV converter</h3>
-                <p class="tool-hint">Paste a JSON array of objects to get CSV, or paste CSV rows to get JSON. Auto-detects direction. Handles nested keys with dot notation.</p>
+                <h3>JSON formatter</h3>
+                <p class="tool-hint">Paste minified or messy JSON on the left. Click <strong>Format</strong> to pretty-print with syntax highlighting on the right. If the JSON is an array of objects you can also download it as a CSV file.</p>
                 <div class="sql-io">
-                    <textarea id="json-in" spellcheck="false" placeholder="Paste JSON array or CSV here&#10;&#10;JSON example:&#10;[{&quot;name&quot;:&quot;Alice&quot;,&quot;age&quot;:30},{&quot;name&quot;:&quot;Bob&quot;,&quot;age&quot;:25}]&#10;&#10;CSV example:&#10;name,age&#10;Alice,30&#10;Bob,25"></textarea>
-                    <pre id="json-out" aria-label="Converted output"></pre>
+                    <textarea id="json-in" spellcheck="false" placeholder="Paste JSON here&#10;&#10;Example:&#10;[{&quot;name&quot;:&quot;Alice&quot;,&quot;age&quot;:30,&quot;city&quot;:&quot;Delhi&quot;},{&quot;name&quot;:&quot;Bob&quot;,&quot;age&quot;:25,&quot;city&quot;:&quot;Mumbai&quot;}]"></textarea>
+                    <pre id="json-out" aria-label="Formatted JSON"></pre>
                 </div>
-                <button type="button" class="btn-tool" id="json-convert">Convert</button>
-                <button type="button" class="btn-tool secondary" id="json-copy">Copy output</button>
+                <button type="button" class="btn-tool" id="json-format">Format</button>
+                <button type="button" class="btn-tool secondary" id="json-copy">Copy formatted</button>
+                <button type="button" class="btn-tool secondary" id="json-csv-dl">Download CSV</button>
+                <div id="json-err" class="tool-error" hidden></div>
             </div>
             <div id="tool-panel-sql" class="tool-panel" hidden>
                 <h3>SQL formatter + keyword hints</h3>

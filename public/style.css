@@ -934,6 +934,18 @@ body {
 .sql-cmt  { color: #555570; font-style: italic; }     /* comments   — dim     */
 .sql-ident { color: #9ed0e6; }                        /* quoted ids — ice blue */
 
+/* ── JSON syntax highlight tokens ─────────────────────────── */
+.json-key  { color: #7c6aff; font-weight: 600; }    /* keys    — purple */
+.json-str  { color: #f0a868; }                        /* strings — amber  */
+.json-num  { color: #00e0b0; }                        /* numbers — teal   */
+.json-bool { color: #a78bfa; font-weight: 600; }     /* bool    — soft purple */
+.json-null { color: #555570; font-style: italic; }   /* null    — dim    */
+[data-theme="light"] .json-key  { color: #5b4cd4; }
+[data-theme="light"] .json-str  { color: #c06020; }
+[data-theme="light"] .json-num  { color: #009e7a; }
+[data-theme="light"] .json-bool { color: #7c6aff; }
+[data-theme="light"] .json-null { color: #9090a8; }
+
 .sql-hints-block {
     margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border);
 }
