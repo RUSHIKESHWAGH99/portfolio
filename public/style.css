@@ -64,39 +64,7 @@ body {
     letter-spacing: -0.5px;
 }
 
-.nav-links { display: flex; gap: 32px; }
-.nav-links a {
-    color: var(--text-dim); text-decoration: none; font-size: 0.9rem;
-    font-weight: 500; transition: color 0.3s; position: relative;
-}
-.nav-links a:hover { color: var(--text); }
-.nav-links a::after {
-    content: ''; position: absolute; bottom: -4px; left: 0;
-    width: 0; height: 2px; background: var(--gradient);
-    transition: width 0.3s ease;
-}
-.nav-links a:hover::after { width: 100%; }
-
-.nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
-.nav-toggle span {
-    display: block; width: 22px; height: 2px; background: var(--text);
-    margin: 5px 0; transition: 0.3s; border-radius: 2px;
-}
-.nav-mobile {
-    display: none; flex-direction: column; gap: 16px; padding: 16px 24px 24px;
-    background: rgba(6, 6, 11, 0.98); border-bottom: 1px solid var(--border);
-}
-.nav-mobile a {
-    color: var(--text-dim); text-decoration: none; font-size: 1rem;
-    font-weight: 500; transition: color 0.2s;
-}
-.nav-mobile a:hover { color: var(--text); }
-.nav-mobile.open { display: flex; }
-
-@media (max-width: 768px) {
-    .nav-links { display: none; }
-    .nav-toggle { display: block; }
-}
+/* nav-links, nav-toggle, and nav-mobile removed — site-tabs is the sole nav */
 
 /* ── Hero ──────────────────────────────────────────────────── */
 .hero {
@@ -1063,13 +1031,27 @@ body {
     -webkit-background-clip: text; background-clip: text;
 }
 [data-theme="light"] .cohort-table td[style] { color: #1a1a2e !important; }
-[data-theme="light"] .nav-mobile {
-    background: rgba(245, 245, 250, 0.98);
-}
-[data-theme="light"] .nav-toggle span { background: var(--text); }
+
 [data-theme="light"] .hero-bg-grid {
     background-image:
         linear-gradient(rgba(91, 76, 212, 0.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(91, 76, 212, 0.06) 1px, transparent 1px);
 }
 [data-theme="light"] ::selection { background: rgba(91, 76, 212, 0.2); color: #1a1a2e; }
+
+/* ── Coming Soon panels (Blogs / Fun) ──────────────────────── */
+.coming-soon-wrap {
+    display: flex; justify-content: center; padding: 60px 0;
+}
+.coming-soon-card {
+    text-align: center; max-width: 480px; padding: 56px 40px;
+    border: 1px solid var(--border); border-radius: 18px;
+    background: rgba(124, 106, 255, 0.04);
+}
+.coming-soon-icon { font-size: 3rem; display: block; margin-bottom: 20px; }
+.coming-soon-card h3 {
+    font-size: 1.6rem; font-weight: 700; margin-bottom: 14px;
+    background: var(--gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text;
+}
+.coming-soon-card p { color: var(--text-dim); line-height: 1.7; font-size: 0.95rem; }

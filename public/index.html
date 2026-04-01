@@ -83,27 +83,10 @@
     <nav class="nav" id="nav">
         <div class="nav-container">
             <a href="#home" class="nav-logo" data-view="home">RW<span class="accent">.</span></a>
-            <div class="nav-links">
-                <a href="#home" data-view="home">Home</a>
-                <a href="#journey" data-view="journey">Journey</a>
-                <a href="#tools" data-view="tools">Tools</a>
-                <a href="#projects" data-view="projects">Projects</a>
-                <a href="#skills" data-view="skills">Skills</a>
-            </div>
             <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" type="button" title="Toggle theme">
                 <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
-            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" type="button">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-        <div class="nav-mobile" id="nav-mobile">
-            <a href="#home" data-view="home">Home</a>
-            <a href="#journey" data-view="journey">Journey</a>
-            <a href="#tools" data-view="tools">Tools</a>
-            <a href="#projects" data-view="projects">Projects</a>
-            <a href="#skills" data-view="skills">Skills</a>
         </div>
     </nav>
 
@@ -113,7 +96,10 @@
             <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="journey" id="tab-journey">Journey</button>
             <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="tools" id="tab-tools">Tools</button>
             <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="projects" id="tab-projects">Projects</button>
-            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="skills" id="tab-skills">Skills &amp; contact</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="skills" id="tab-skills">Skills</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="contact" id="tab-contact">Contact</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="blogs" id="tab-blogs">Blogs</button>
+            <button type="button" class="site-tab" role="tab" aria-selected="false" data-view="fun" id="tab-fun">Fun</button>
         </div>
     </div>
 
@@ -444,7 +430,7 @@
     <div id="view-tools" class="view-panel" hidden>
         <header class="tools-hero">
             <div class="container">
-                <h2>Free analytics tools</h2>
+                <h2>Analytics Co-Pilot</h2>
                 <p>Quick, private utilities that run entirely in your browser — no sign-up, no AI, no server. Useful for experiment readouts, retention tables, and readable SQL.</p>
                 <span class="tools-badge">100% client-side · $0 infra</span>
             </div>
@@ -677,7 +663,7 @@
     <!-- Skills -->
     <section class="section" id="skills">
         <div class="container">
-            <h2 class="section-title reveal">Skills & Tools</h2>
+            <h2 class="section-title reveal">Skills</h2>
             <div class="skills-grid">
                 <div class="skill-category reveal">
                     <h3>Languages</h3>
@@ -727,7 +713,9 @@
         </div>
     </section>
 
-    <!-- Contact -->
+    </div>
+
+    <div id="view-contact" class="view-panel" hidden>
     <section class="section section-alt" id="contact">
         <div class="container contact-container">
             <h2 class="section-title reveal">Get in Touch</h2>
@@ -751,6 +739,38 @@
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>Resume</span>
                 </a>
+            </div>
+        </div>
+    </section>
+    </div>
+
+    <div id="view-blogs" class="view-panel" hidden>
+    <section class="section" id="blogs">
+        <div class="container">
+            <h2 class="section-title reveal">Blogs</h2>
+            <p class="section-subtitle reveal">Educational content on analytics — from experimentation to ML, metric design, and data storytelling.</p>
+            <div class="coming-soon-wrap reveal">
+                <div class="coming-soon-card">
+                    <span class="coming-soon-icon">✍️</span>
+                    <h3>Coming Soon</h3>
+                    <p>In-depth write-ups on analytics concepts, SQL patterns, A/B testing, cohort analysis, and real-world data lessons are on their way.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    </div>
+
+    <div id="view-fun" class="view-panel" hidden>
+    <section class="section" id="fun">
+        <div class="container">
+            <h2 class="section-title reveal">Fun</h2>
+            <p class="section-subtitle reveal">Quizzes and mini-games to test your analytics thinking — in a fun way.</p>
+            <div class="coming-soon-wrap reveal">
+                <div class="coming-soon-card">
+                    <span class="coming-soon-icon">🎮</span>
+                    <h3>Coming Soon</h3>
+                    <p>Analytics quizzes, SQL puzzles, and stat-based mini-games are in the works. Come back soon!</p>
+                </div>
             </div>
         </div>
     </section>

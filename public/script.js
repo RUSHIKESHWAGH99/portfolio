@@ -1,5 +1,5 @@
 // ── Site views (tabs + hash) ─────────────────────────────────
-const VIEW_IDS = ["home", "journey", "tools", "projects", "skills"];
+const VIEW_IDS = ["home", "journey", "tools", "projects", "skills", "contact", "blogs", "fun"];
 
 function showView(name) {
     const n = VIEW_IDS.includes(name) ? name : "home";
