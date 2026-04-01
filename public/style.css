@@ -20,7 +20,7 @@
     --glow:      0 0 60px rgba(124, 106, 255, 0.08);
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+html { scroll-behavior: smooth; scroll-padding-top: 130px; }
 
 body {
     font-family: var(--font);
@@ -29,6 +29,8 @@ body {
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    /* offset for the fixed nav so site-tabs sits correctly at top:64px */
+    padding-top: 64px;
 }
 
 ::selection { background: rgba(124, 106, 255, 0.3); color: white; }
@@ -100,7 +102,8 @@ body {
 .hero {
     min-height: 100vh; display: flex; align-items: center;
     justify-content: center; position: relative; overflow: hidden;
-    padding: 120px 24px 80px;
+    /* reduced from 120px — body already offsets 64px for fixed nav */
+    padding: 56px 24px 80px;
 }
 
 .hero-bg-grid {
@@ -758,35 +761,66 @@ body {
 /* ── Site tabs & view panels ───────────────────────────────── */
 .site-tabs {
     position: sticky; top: 64px; z-index: 99;
-    background: rgba(6, 6, 11, 0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+    background: rgba(6, 6, 11, 0.97);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 2px solid var(--border);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 .site-tabs-inner {
-    display: flex; flex-wrap: wrap; gap: 4px;
-    padding: 10px 24px 12px; max-width: 1100px; margin: 0 auto;
-    align-items: center;
+    display: flex; gap: 0;
+    padding: 0 20px; max-width: 1100px; margin: 0 auto;
+    align-items: stretch; overflow-x: auto;
+    scrollbar-width: none; /* hide scrollbar on Firefox */
 }
+.site-tabs-inner::-webkit-scrollbar { display: none; }
+
 .site-tab {
-    appearance: none; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text-dim);
-    font-family: var(--font); font-size: 0.82rem; font-weight: 600;
-    padding: 8px 16px; border-radius: 999px; cursor: pointer;
-    text-decoration: none; transition: all 0.25s ease;
+    appearance: none; border: none; border-bottom: 3px solid transparent;
+    background: transparent; color: var(--text-dim);
+    font-family: var(--font); font-size: 0.88rem; font-weight: 600;
+    padding: 16px 20px 13px; cursor: pointer; white-space: nowrap;
+    letter-spacing: 0.01em;
+    text-decoration: none; transition: color 0.2s, border-color 0.2s;
+    position: relative;
 }
-.site-tab:hover { color: var(--text); border-color: rgba(124, 106, 255, 0.35); }
+.site-tab:hover { color: var(--text); }
+.site-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    border-radius: 4px;
+}
 .site-tab.active {
-    color: white; border-color: transparent;
-    background: linear-gradient(135deg, rgba(124, 106, 255, 0.35), rgba(0, 224, 176, 0.2));
-    box-shadow: 0 0 0 1px rgba(124, 106, 255, 0.25);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+/* Subtle gradient glow on active tab underline */
+.site-tab.active::after {
+    content: '';
+    position: absolute; bottom: -2px; left: 20px; right: 20px; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 2px 2px 0 0;
 }
 
 .main-views { min-height: 40vh; }
 .view-panel[hidden] { display: none !important; }
 
+/* Smooth fade when switching views */
+.view-panel {
+    animation: view-fade 0.18s ease;
+}
+@keyframes view-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+    .site-tabs-inner { padding: 0 12px; gap: 0; }
+    .site-tab { font-size: 0.8rem; padding: 14px 14px 11px; }
+}
+
 /* ── Free tools ───────────────────────────────────────────── */
 .tools-hero {
-    padding: 48px 0 24px;
+    padding: 56px 0 28px;
     text-align: center;
     border-bottom: 1px solid var(--border);
     background: linear-gradient(180deg, rgba(124, 106, 255, 0.06), transparent);

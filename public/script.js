@@ -6,16 +6,22 @@ function showView(name) {
     VIEW_IDS.forEach((id) => {
         const el = document.getElementById(`view-${id}`);
         if (!el) return;
-        if (id === n) el.removeAttribute("hidden");
-        else el.setAttribute("hidden", "");
+        if (id === n) {
+            el.removeAttribute("hidden");
+        } else {
+            el.setAttribute("hidden", "");
+        }
     });
     document.querySelectorAll(".site-tab").forEach((tab) => {
         const on = tab.dataset.view === n;
         tab.classList.toggle("active", on);
         tab.setAttribute("aria-selected", on ? "true" : "false");
     });
+    // Scroll the active tab into view inside the scrollable tab strip
+    const activeTab = document.querySelector(`.site-tab[data-view="${n}"]`);
+    activeTab?.scrollIntoView({ block: "nearest", inline: "center" });
     history.replaceState(null, "", `#${n}`);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function initViews() {
