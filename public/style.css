@@ -949,3 +949,97 @@ body {
 @media (max-width: 768px) {
     .site-tabs-inner { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
 }
+
+/* ── Impact strip (Home) ─────────────────────────────────── */
+.impact-strip { padding: 80px 0; }
+.impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px; max-width: 1000px; margin: 0 auto;
+}
+.impact-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 24px; text-align: center;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: transform 0.35s, border-color 0.35s, box-shadow 0.35s;
+}
+.impact-card:hover {
+    transform: translateY(-5px); border-color: rgba(124, 106, 255, 0.35);
+    box-shadow: 0 12px 36px rgba(124, 106, 255, 0.08);
+}
+.impact-metric {
+    font-size: 1.9rem; font-weight: 800; line-height: 1.1;
+    background: var(--gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text;
+}
+.impact-label { font-size: 0.92rem; font-weight: 600; color: var(--text); }
+.impact-where {
+    font-size: 0.78rem; color: var(--text-dim); font-style: italic; margin-top: 2px;
+}
+
+/* ── Theme toggle ─────────────────────────────────────────── */
+.theme-toggle {
+    appearance: none; border: 1px solid var(--border);
+    background: var(--surface); border-radius: 50%;
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-dim); margin-left: 8px;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+.theme-icon-moon { display: none; }
+[data-theme="light"] .theme-icon-sun  { display: none; }
+[data-theme="light"] .theme-icon-moon { display: block; }
+
+/* ── Light theme ──────────────────────────────────────────── */
+[data-theme="light"] {
+    --bg:        #f5f5fa;
+    --bg-alt:    #eeeef4;
+    --surface:   #ffffff;
+    --border:    #d4d4e0;
+    --text:      #1a1a2e;
+    --text-dim:  #5a5a78;
+    --accent:    #5b4cd4;
+    --accent-2:  #009e7a;
+    --accent-glow: rgba(91, 76, 212, 0.12);
+    --accent-2-glow: rgba(0, 158, 122, 0.10);
+    --shadow:    0 8px 32px rgba(0, 0, 0, 0.08);
+    --glow:      0 0 60px rgba(91, 76, 212, 0.06);
+}
+[data-theme="light"] body { background: var(--bg); color: var(--text); }
+[data-theme="light"] .nav {
+    background: rgba(245, 245, 250, 0.85);
+}
+[data-theme="light"] .nav.scrolled {
+    background: rgba(245, 245, 250, 0.97);
+}
+[data-theme="light"] .site-tabs {
+    background: rgba(245, 245, 250, 0.97);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+[data-theme="light"] .mini-dashboard {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+[data-theme="light"] .sql-io pre {
+    background: #f0f0f8; border-color: var(--border);
+}
+[data-theme="light"] .sql-kw  { color: #5b4cd4; }
+[data-theme="light"] .sql-fn  { color: #7c6aff; }
+[data-theme="light"] .sql-str { color: #c06020; }
+[data-theme="light"] .sql-num { color: #009e7a; }
+[data-theme="light"] .sql-cmt { color: #9090a8; }
+[data-theme="light"] .sql-ident { color: #2070a0; }
+[data-theme="light"] .hero-name {
+    background: linear-gradient(135deg, #5b4cd4, #009e7a);
+    -webkit-background-clip: text; background-clip: text;
+}
+[data-theme="light"] .cohort-table td[style] { color: #1a1a2e !important; }
+[data-theme="light"] .nav-mobile {
+    background: rgba(245, 245, 250, 0.98);
+}
+[data-theme="light"] .nav-toggle span { background: var(--text); }
+[data-theme="light"] .hero-bg-grid {
+    background-image:
+        linear-gradient(rgba(91, 76, 212, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91, 76, 212, 0.06) 1px, transparent 1px);
+}
+[data-theme="light"] ::selection { background: rgba(91, 76, 212, 0.2); color: #1a1a2e; }

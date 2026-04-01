@@ -598,15 +598,175 @@ function initSqlTool() {
     run();
 }
 
+// ── Sample size calculator ────────────────────────────────────
+function zFromAlpha(alpha) {
+    const m = { 0.10: 1.6449, 0.05: 1.9600, 0.01: 2.5758 };
+    return m[alpha] || 1.96;
+}
+function zFromPower(power) {
+    const m = { 0.80: 0.8416, 0.90: 1.2816, 0.95: 1.6449 };
+    return m[power] || 0.8416;
+}
+
+function initSampleSize() {
+    const btn = document.getElementById("ss-calc");
+    const out = document.getElementById("ss-out");
+    const err = document.getElementById("ss-err");
+    if (!btn || !out || !err) return;
+
+    btn.addEventListener("click", () => {
+        err.hidden = true;
+        out.hidden = true;
+
+        const baseline = Number(document.getElementById("ss-baseline")?.value) / 100;
+        const mdeRel   = Number(document.getElementById("ss-mde")?.value) / 100;
+        const power    = Number(document.getElementById("ss-power")?.value);
+        const alpha    = Number(document.getElementById("ss-alpha")?.value);
+
+        if (baseline <= 0 || baseline >= 1 || mdeRel <= 0) {
+            err.textContent = "Baseline must be 0-100 % and MDE must be positive.";
+            err.hidden = false;
+            return;
+        }
+
+        const p1 = baseline;
+        const p2 = baseline * (1 + mdeRel);
+        if (p2 >= 1) {
+            err.textContent = "Variant rate (baseline + MDE) exceeds 100 %. Reduce MDE.";
+            err.hidden = false;
+            return;
+        }
+
+        const za = zFromAlpha(alpha);
+        const zb = zFromPower(power);
+        const n = Math.ceil(
+            Math.pow(za * Math.sqrt(2 * baseline * (1 - baseline)) + zb * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)), 2) /
+            Math.pow(p2 - p1, 2)
+        );
+
+        const totalDays7  = Math.ceil((n * 2) / 1000);
+        const totalDays14 = Math.ceil((n * 2) / 500);
+
+        out.innerHTML = `
+            <dl>
+                <dt>Baseline rate</dt><dd>${(p1 * 100).toFixed(2)}%</dd>
+                <dt>Variant rate (expected)</dt><dd>${(p2 * 100).toFixed(2)}%</dd>
+                <dt>Absolute effect</dt><dd>${((p2 - p1) * 100).toFixed(2)} pp</dd>
+                <dt>Sample per group</dt><dd><strong>${n.toLocaleString()}</strong></dd>
+                <dt>Total users (both groups)</dt><dd>${(n * 2).toLocaleString()}</dd>
+                <dt>At 1k users/day</dt><dd>~${totalDays7} days</dd>
+                <dt>At 500 users/day</dt><dd>~${totalDays14} days</dd>
+            </dl>
+            <p style="margin-top:14px;color:var(--text-dim);font-size:0.82rem">Two-sided test, equal allocation, normal approximation.</p>`;
+        out.hidden = false;
+    });
+}
+
+// ── JSON ↔ CSV converter ─────────────────────────────────────
+function flattenObj(obj, prefix) {
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) {
+        const key = prefix ? `${prefix}.${k}` : k;
+        if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+            Object.assign(out, flattenObj(v, key));
+        } else {
+            out[key] = v;
+        }
+    }
+    return out;
+}
+
+function jsonToCsv(arr) {
+    const flat = arr.map((row) => flattenObj(row, ""));
+    const keys = [...new Set(flat.flatMap(Object.keys))];
+    const escape = (v) => {
+        const s = v == null ? "" : String(v);
+        return s.includes(",") || s.includes('"') || s.includes("\n")
+            ? `"${s.replace(/"/g, '""')}"`
+            : s;
+    };
+    const lines = [keys.map(escape).join(",")];
+    for (const row of flat) {
+        lines.push(keys.map((k) => escape(row[k])).join(","));
+    }
+    return lines.join("\n");
+}
+
+function csvToJson(text) {
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error("CSV needs a header + at least one data row.");
+    const header = rows[0];
+    return rows.slice(1).map((row) => {
+        const obj = {};
+        header.forEach((h, i) => {
+            let v = row[i] ?? "";
+            if (v !== "" && !isNaN(Number(v))) v = Number(v);
+            else if (v === "true") v = true;
+            else if (v === "false") v = false;
+            obj[h] = v;
+        });
+        return obj;
+    });
+}
+
+function initJsonCsv() {
+    const ta  = document.getElementById("json-in");
+    const pre = document.getElementById("json-out");
+    const btn = document.getElementById("json-convert");
+    const cpy = document.getElementById("json-copy");
+    if (!ta || !pre || !btn) return;
+
+    btn.addEventListener("click", () => {
+        const raw = ta.value.trim();
+        if (!raw) { pre.textContent = ""; return; }
+        try {
+            if (raw.startsWith("[") || raw.startsWith("{")) {
+                let parsed = JSON.parse(raw);
+                if (!Array.isArray(parsed)) parsed = [parsed];
+                pre.textContent = jsonToCsv(parsed);
+            } else {
+                const json = csvToJson(raw);
+                pre.textContent = JSON.stringify(json, null, 2);
+            }
+        } catch (e) {
+            pre.textContent = `Error: ${e instanceof Error ? e.message : "Could not parse input."}`;
+        }
+    });
+
+    if (cpy) {
+        cpy.addEventListener("click", async () => {
+            try { await navigator.clipboard.writeText(pre.textContent || ""); } catch { /* ignore */ }
+        });
+    }
+}
+
+// ── Theme toggle (light / dark) ──────────────────────────────
+function initTheme() {
+    const toggle = document.getElementById("theme-toggle");
+    if (!toggle) return;
+
+    const stored = localStorage.getItem("theme");
+    if (stored === "light") document.documentElement.setAttribute("data-theme", "light");
+
+    toggle.addEventListener("click", () => {
+        const isLight = document.documentElement.getAttribute("data-theme") === "light";
+        if (isLight) {
+            document.documentElement.removeAttribute("data-theme");
+            localStorage.setItem("theme", "dark");
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+            localStorage.setItem("theme", "light");
+        }
+    });
+}
+
 // ── Tool sub-tabs ─────────────────────────────────────────────
 function initToolSwitcher() {
     const tabs = document.querySelectorAll(".tool-switch");
-    const panels = {
-        ab: document.getElementById("tool-panel-ab"),
-        cohort: document.getElementById("tool-panel-cohort"),
-        sql: document.getElementById("tool-panel-sql"),
-    };
-    if (!tabs.length || !panels.ab) return;
+    const panelIds = ["ab", "sample", "cohort", "json", "sql"];
+    const panels = {};
+    panelIds.forEach((id) => { panels[id] = document.getElementById(`tool-panel-${id}`); });
+    if (!tabs.length) return;
 
     tabs.forEach((tab) => {
         tab.addEventListener("click", () => {
@@ -624,12 +784,15 @@ function initToolSwitcher() {
 }
 
 // ── Boot ────────────────────────────────────────────────────
+initTheme();
 initViews();
 initReveal();
 initNavScroll();
 initMobileNav();
 initStats();
 initABCalculator();
+initSampleSize();
 initCohortTool();
+initJsonCsv();
 initSqlTool();
 initToolSwitcher();
