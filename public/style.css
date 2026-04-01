@@ -951,16 +951,18 @@ body {
 .sql-ident { color: #9ed0e6; }                        /* quoted ids — ice blue */
 
 /* ── JSON syntax highlight tokens ─────────────────────────── */
-.json-key  { color: #7c6aff; font-weight: 600; }    /* keys    — purple */
-.json-str  { color: #f0a868; }                        /* strings — amber  */
-.json-num  { color: #00e0b0; }                        /* numbers — teal   */
-.json-bool { color: #a78bfa; font-weight: 600; }     /* bool    — soft purple */
-.json-null { color: #555570; font-style: italic; }   /* null    — dim    */
-[data-theme="light"] .json-key  { color: #5b4cd4; }
-[data-theme="light"] .json-str  { color: #c06020; }
-[data-theme="light"] .json-num  { color: #009e7a; }
-[data-theme="light"] .json-bool { color: #7c6aff; }
-[data-theme="light"] .json-null { color: #9090a8; }
+/* Keys: cool blue (structural labels). Values: json-val + type — warm / literal hues. */
+.json-key { color: #82aaff; font-weight: 600; }
+.json-val { font-weight: 400; }
+.json-val.json-str  { color: #ffcb6b; }
+.json-val.json-num  { color: #c3e88d; }
+.json-val.json-bool { color: #f78c6c; font-weight: 500; }
+.json-val.json-null { color: #6b6d85; font-style: italic; }
+[data-theme="light"] .json-key { color: #1565c0; }
+[data-theme="light"] .json-val.json-str  { color: #b45309; }
+[data-theme="light"] .json-val.json-num  { color: #2e7d32; }
+[data-theme="light"] .json-val.json-bool { color: #c2410c; }
+[data-theme="light"] .json-val.json-null { color: #787891; }
 
 .sql-hints-block {
     margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border);

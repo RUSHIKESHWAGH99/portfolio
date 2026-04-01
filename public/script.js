@@ -340,7 +340,7 @@ const SQL_HINTS = {
     OR:              "Alternative condition — often needs parentheses to avoid ambiguity.",
     "GROUP BY":      "Buckets rows before aggregates (SUM, COUNT, …) are applied.",
     HAVING:          "Filters groups after aggregation (similar to WHERE for aggregates).",
-    "ORDER BY":      "Sorts the final result by one or more columns or expressions.",
+    "ORDER BY":      "Sorts rows — final result set, or inside OVER before the window frame is applied.",
     LIMIT:           "Caps how many rows are returned (syntax varies slightly by engine).",
     OFFSET:          "Skips rows before applying LIMIT (pagination).",
     UNION:           "Stacks results from two queries; column counts/types should align.",
@@ -348,6 +348,21 @@ const SQL_HINTS = {
     WITH:            "Defines a common table expression (CTE) — a reusable named subquery.",
     OVER:            "Opens a window-function frame — works with PARTITION BY / ORDER BY.",
     "PARTITION BY":  "Divides rows into groups within a window function frame.",
+    ROWS:            "ROWS frame: counts physical row positions relative to the current row.",
+    RANGE:           "RANGE frame: groups rows tied on ORDER BY values (handles ties vs ROWS).",
+    "ROWS BETWEEN":  "Defines a ROWS window frame: ROWS BETWEEN … PRECEDING/FOLLOWING AND …",
+    "RANGE BETWEEN": "Defines a RANGE window frame: RANGE BETWEEN … AND …",
+    UNBOUNDED:      "Frame boundary: UNBOUNDED PRECEDING / UNBOUNDED FOLLOWING (partition start/end).",
+    "UNBOUNDED PRECEDING": "Frame starts at the first row of the partition (or peer group).",
+    "UNBOUNDED FOLLOWING": "Frame extends through the last row of the partition (or peer group).",
+    PRECEDING:       "N PRECEDING — N rows or units before the current row in the frame.",
+    FOLLOWING:       "N FOLLOWING — N rows or units after the current row in the frame.",
+    "CURRENT ROW":   "CURRENT ROW — frame boundary at the current row.",
+    WINDOW:          "Names a reusable window spec: WINDOW w AS (PARTITION BY … ORDER BY …).",
+    FILTER:          "FILTER (WHERE …) — restricts which rows feed an aggregate or window function.",
+    QUALIFY:         "Filters rows after window functions (e.g. Snowflake: QUALIFY rn = 1).",
+    RESPECT:         "RESPECT NULLS — include NULLs in ordering for LEAD/LAG-style navigation.",
+    IGNORE:          "IGNORE NULLS — skip NULLs when stepping with LEAD/LAG (engine-dependent).",
     DISTINCT:        "Removes duplicate rows from the result set.",
     CASE:            "Conditional expression: CASE WHEN … THEN … ELSE … END.",
 };
@@ -355,6 +370,9 @@ const SQL_HINTS = {
 // Clause-starting keywords (longer patterns first so GROUP BY beats BY)
 const SQL_CLAUSE_KW = [
     "GROUP BY", "ORDER BY", "PARTITION BY",
+    "UNBOUNDED PRECEDING", "UNBOUNDED FOLLOWING",
+    "ROWS BETWEEN", "RANGE BETWEEN", "CURRENT ROW",
+    "OVER", "WINDOW",
     "LEFT OUTER JOIN", "RIGHT OUTER JOIN", "FULL OUTER JOIN",
     "LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "FULL JOIN", "CROSS JOIN",
     "UNION ALL", "UNION", "INTERSECT", "EXCEPT",
@@ -375,13 +393,15 @@ const SQL_KW_SET = new Set([
     "DISTINCT", "TOP", "INTO", "VALUES", "INSERT", "UPDATE", "DELETE",
     "CREATE", "DROP", "ALTER", "TABLE", "VIEW", "INDEX", "WITH",
     "OVER", "PARTITION", "ROWS", "RANGE", "UNBOUNDED", "PRECEDING",
-    "FOLLOWING", "CURRENT", "ROW", "ASC", "DESC", "NULLS", "FIRST", "LAST",
+    "FOLLOWING", "CURRENT", "ROW", "WINDOW", "FILTER", "QUALIFY",
+    "RESPECT", "IGNORE", "ASC", "DESC", "NULLS", "FIRST", "LAST",
     "SET", "RETURNING", "EXCEPT", "INTERSECT", "RECURSIVE",
     "TRUE", "FALSE",
     // aggregate / window / scalar functions
     "COUNT", "SUM", "AVG", "MIN", "MAX", "COALESCE", "NULLIF", "CAST",
     "CONVERT", "EXTRACT", "DATE_TRUNC", "DATE_PART", "NOW", "CURRENT_DATE",
-    "ROW_NUMBER", "RANK", "DENSE_RANK", "LAG", "LEAD", "NTILE",
+    "ROW_NUMBER", "RANK", "DENSE_RANK", "PERCENT_RANK", "CUME_DIST",
+    "LAG", "LEAD", "NTILE",
     "FIRST_VALUE", "LAST_VALUE", "NTH_VALUE",
     "CONCAT", "LENGTH", "LOWER", "UPPER", "TRIM", "LTRIM", "RTRIM",
     "SUBSTRING", "REPLACE", "SPLIT_PART", "REGEXP_REPLACE",
@@ -671,19 +691,19 @@ function highlightJson(str) {
         '<span class="json-key">$1</span>:'
     ).replace(
         /:\s*("(?:\\.|[^"\\])*")/g,
-        ': <span class="json-str">$1</span>'
+        ': <span class="json-val json-str">$1</span>'
     ).replace(
         /:\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/g,
-        ': <span class="json-num">$1</span>'
+        ': <span class="json-val json-num">$1</span>'
     ).replace(
         /:\s*(true|false)\b/g,
-        ': <span class="json-bool">$1</span>'
+        ': <span class="json-val json-bool">$1</span>'
     ).replace(
         /:\s*(null)\b/g,
-        ': <span class="json-null">$1</span>'
+        ': <span class="json-val json-null">$1</span>'
     ).replace(
         /^(\s*"(?:\\.|[^"\\])*")(?!:)/gm,
-        '<span class="json-str">$1</span>'
+        '<span class="json-val json-str">$1</span>'
     );
 }
 
