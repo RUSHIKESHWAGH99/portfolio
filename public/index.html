@@ -452,9 +452,9 @@
         <div class="tool-switcher" role="tablist" aria-label="Choose a tool">
             <button type="button" class="tool-switch active" data-tool="ab" aria-selected="true">A/B test calculator</button>
             <button type="button" class="tool-switch" data-tool="sample" aria-selected="false">Sample size</button>
-            <button type="button" class="tool-switch" data-tool="cohort" aria-selected="false">Cohort table (CSV)</button>
             <button type="button" class="tool-switch" data-tool="json" aria-selected="false">JSON formatter</button>
             <button type="button" class="tool-switch" data-tool="sql" aria-selected="false">SQL formatter</button>
+            <button type="button" class="tool-switch" data-tool="cohort" aria-selected="false">Cohort table (CSV)</button>
         </div>
         <div class="tool-panels-wrap">
             <div id="tool-panel-ab" class="tool-panel">
@@ -502,16 +502,6 @@
                 <div id="ss-out" class="ab-results" hidden></div>
                 <div id="ss-err" class="tool-error" hidden></div>
             </div>
-            <div id="tool-panel-cohort" class="tool-panel" hidden>
-                <h3>Cohort retention heatmap</h3>
-                <p class="tool-hint"><strong>CSV format (wide):</strong> first column = cohort name; remaining columns = period 0, 1, 2… (counts or retention %). Example header: <code>cohort,0,1,2,3</code>. Values between 0 and 1 are treated as fractions.</p>
-                <label class="file-drop-label">
-                    <input type="file" id="cohort-file" accept=".csv,text/csv" />
-                    Drop a CSV here or tap to choose a file
-                </label>
-                <div id="cohort-err" class="tool-error" hidden></div>
-                <div id="cohort-out"></div>
-            </div>
             <div id="tool-panel-json" class="tool-panel" hidden>
                 <h3>JSON formatter</h3>
                 <p class="tool-hint">Paste minified or messy JSON on the left. Click <strong>Format</strong> to pretty-print with syntax highlighting on the right. If the JSON is an array of objects you can also download it as a CSV file.</p>
@@ -537,6 +527,16 @@
                     <h4>Keywords detected (reference)</h4>
                     <ul id="sql-hint-list" class="sql-hints-list"></ul>
                 </div>
+            </div>
+            <div id="tool-panel-cohort" class="tool-panel" hidden>
+                <h3>Cohort retention heatmap</h3>
+                <p class="tool-hint"><strong>CSV format (wide):</strong> first column = cohort name; remaining columns = period 0, 1, 2… (counts or retention %). Example header: <code>cohort,0,1,2,3</code>. Values between 0 and 1 are treated as fractions.</p>
+                <label class="file-drop-label">
+                    <input type="file" id="cohort-file" accept=".csv,text/csv" />
+                    Drop a CSV here or tap to choose a file
+                </label>
+                <div id="cohort-err" class="tool-error" hidden></div>
+                <div id="cohort-out"></div>
             </div>
         </div>
     </div>
