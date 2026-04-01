@@ -323,92 +323,269 @@ function escapeHtml(s) {
         .replace(/"/g, "&quot;");
 }
 
-// ── SQL format + static hints ─────────────────────────────────
-const SQL_KEYWORDS_ORDERED = [
-    "GROUP BY",
-    "ORDER BY",
-    "LEFT JOIN",
-    "RIGHT JOIN",
-    "INNER JOIN",
-    "FULL JOIN",
-    "CROSS JOIN",
-    "UNION ALL",
-    "UNION",
-    "SELECT",
-    "FROM",
-    "WHERE",
-    "HAVING",
-    "JOIN",
-    "AND",
-    "OR",
-    "ON",
-    "LIMIT",
-    "OFFSET",
-    "WITH",
-];
+// ── SQL format + highlight + static hints ─────────────────────
 
 const SQL_HINTS = {
-    SELECT: "Lists columns or expressions to return in the result set.",
-    FROM: "Names the primary table (or subquery) rows are read from.",
-    WHERE: "Filters rows before aggregation; conditions use column values.",
-    JOIN: "Combines rows from another table using a join condition.",
-    "INNER JOIN": "Keeps only rows that match on both sides of the join.",
-    "LEFT JOIN": "Keeps all rows from the left table; fills gaps from the right with NULL.",
-    "RIGHT JOIN": "Keeps all rows from the right table; opposite bias vs LEFT JOIN.",
-    "FULL JOIN": "Keeps rows from either side when a match exists on either.",
-    "CROSS JOIN": "Cartesian product — every left row paired with every right row.",
-    ON: "Specifies how joined tables relate (e.g. keys that must match).",
-    AND: "Adds another required condition (logical AND).",
-    OR: "Alternative condition — often needs parentheses to avoid ambiguity.",
-    "GROUP BY": "Buckets rows before aggregates (SUM, COUNT, …) are applied.",
-    HAVING: "Filters groups after aggregation (similar to WHERE for aggregates).",
-    "ORDER BY": "Sorts the final result by one or more columns or expressions.",
-    LIMIT: "Caps how many rows are returned (syntax varies slightly by engine).",
-    OFFSET: "Skips rows before applying LIMIT (pagination).",
-    UNION: "Stacks results from two queries; column counts/types should align.",
-    "UNION ALL": "Like UNION but keeps duplicate rows.",
-    WITH: "Defines a common table expression (CTE) — a reusable named subquery.",
+    SELECT:          "Lists columns or expressions to return in the result set.",
+    FROM:            "Names the primary table (or subquery) rows are read from.",
+    WHERE:           "Filters rows before aggregation; conditions use column values.",
+    JOIN:            "Combines rows from another table using a join condition.",
+    "INNER JOIN":    "Keeps only rows that match on both sides of the join.",
+    "LEFT JOIN":     "Keeps all rows from the left table; fills gaps from the right with NULL.",
+    "RIGHT JOIN":    "Keeps all rows from the right table; opposite bias vs LEFT JOIN.",
+    "FULL JOIN":     "Keeps rows from either side when a match exists on either.",
+    "CROSS JOIN":    "Cartesian product — every left row paired with every right row.",
+    ON:              "Specifies how joined tables relate (e.g. keys that must match).",
+    AND:             "Adds another required condition (logical AND).",
+    OR:              "Alternative condition — often needs parentheses to avoid ambiguity.",
+    "GROUP BY":      "Buckets rows before aggregates (SUM, COUNT, …) are applied.",
+    HAVING:          "Filters groups after aggregation (similar to WHERE for aggregates).",
+    "ORDER BY":      "Sorts the final result by one or more columns or expressions.",
+    LIMIT:           "Caps how many rows are returned (syntax varies slightly by engine).",
+    OFFSET:          "Skips rows before applying LIMIT (pagination).",
+    UNION:           "Stacks results from two queries; column counts/types should align.",
+    "UNION ALL":     "Like UNION but keeps duplicate rows.",
+    WITH:            "Defines a common table expression (CTE) — a reusable named subquery.",
+    OVER:            "Opens a window-function frame — works with PARTITION BY / ORDER BY.",
+    "PARTITION BY":  "Divides rows into groups within a window function frame.",
+    DISTINCT:        "Removes duplicate rows from the result set.",
+    CASE:            "Conditional expression: CASE WHEN … THEN … ELSE … END.",
 };
 
-function formatSql(sql) {
-    let s = sql.replace(/\s+/g, " ").trim();
-    for (const kw of SQL_KEYWORDS_ORDERED) {
-        const pattern = kw.replace(/\s+/g, "\\s+");
-        const re = new RegExp(`\\b${pattern}\\b`, "gi");
-        s = s.replace(re, `\n${kw.toUpperCase()} `);
+// Clause-starting keywords (longer patterns first so GROUP BY beats BY)
+const SQL_CLAUSE_KW = [
+    "GROUP BY", "ORDER BY", "PARTITION BY",
+    "LEFT OUTER JOIN", "RIGHT OUTER JOIN", "FULL OUTER JOIN",
+    "LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "FULL JOIN", "CROSS JOIN",
+    "UNION ALL", "UNION", "INTERSECT", "EXCEPT",
+    "FROM", "WHERE", "HAVING", "SELECT",
+    "LIMIT", "OFFSET", "WITH",
+    "INSERT INTO", "UPDATE", "SET", "DELETE FROM",
+];
+
+// Sub-clause continuations → indented
+const SQL_INDENT_KW = ["AND", "OR", "ON"];
+
+// All keywords recognised for syntax highlighting
+const SQL_KW_SET = new Set([
+    "SELECT", "FROM", "WHERE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER",
+    "FULL", "CROSS", "ON", "AND", "OR", "NOT", "IN", "EXISTS", "BETWEEN",
+    "LIKE", "ILIKE", "IS", "NULL", "AS", "CASE", "WHEN", "THEN", "ELSE", "END",
+    "GROUP", "BY", "HAVING", "ORDER", "LIMIT", "OFFSET", "UNION", "ALL",
+    "DISTINCT", "TOP", "INTO", "VALUES", "INSERT", "UPDATE", "DELETE",
+    "CREATE", "DROP", "ALTER", "TABLE", "VIEW", "INDEX", "WITH",
+    "OVER", "PARTITION", "ROWS", "RANGE", "UNBOUNDED", "PRECEDING",
+    "FOLLOWING", "CURRENT", "ROW", "ASC", "DESC", "NULLS", "FIRST", "LAST",
+    "SET", "RETURNING", "EXCEPT", "INTERSECT", "RECURSIVE",
+    "TRUE", "FALSE",
+    // aggregate / window / scalar functions
+    "COUNT", "SUM", "AVG", "MIN", "MAX", "COALESCE", "NULLIF", "CAST",
+    "CONVERT", "EXTRACT", "DATE_TRUNC", "DATE_PART", "NOW", "CURRENT_DATE",
+    "ROW_NUMBER", "RANK", "DENSE_RANK", "LAG", "LEAD", "NTILE",
+    "FIRST_VALUE", "LAST_VALUE", "NTH_VALUE",
+    "CONCAT", "LENGTH", "LOWER", "UPPER", "TRIM", "LTRIM", "RTRIM",
+    "SUBSTRING", "REPLACE", "SPLIT_PART", "REGEXP_REPLACE",
+    "ROUND", "FLOOR", "CEIL", "CEILING", "ABS", "MOD", "POWER", "SQRT",
+    "IIF", "IF", "IFNULL", "NVL", "DECODE", "GREATEST", "LEAST",
+    "TO_CHAR", "TO_DATE", "TO_TIMESTAMP", "DATE_ADD", "DATE_DIFF",
+    "ARRAY_AGG", "STRING_AGG", "LISTAGG", "JSON_AGG",
+    "GENERATE_SERIES",
+]);
+
+/** Split `s` by commas at paren depth 0 (so f(a, b) stays whole). */
+function splitTopLevelCommas(s) {
+    const parts = [];
+    let depth = 0;
+    let cur = "";
+    for (const ch of s) {
+        if (ch === "(" || ch === "[") { depth++; cur += ch; }
+        else if (ch === ")" || ch === "]") { depth--; cur += ch; }
+        else if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; }
+        else { cur += ch; }
     }
-    return s
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .join("\n")
-        .trim();
+    if (cur.trim()) parts.push(cur.trim());
+    return parts;
 }
 
+/**
+ * Format SQL with proper clause indentation.
+ * Returns plain text (no HTML) — suitable for clipboard copy.
+ */
+function formatSql(sql) {
+    // Collapse all runs of whitespace to a single space
+    let s = sql.replace(/\s+/g, " ").trim();
+
+    // Place clause-starting keywords on their own line
+    for (const kw of SQL_CLAUSE_KW) {
+        const pat = kw.replace(/\s+/g, "\\s+");
+        s = s.replace(new RegExp(`\\b${pat}\\b`, "gi"), `\n${kw} `);
+    }
+
+    // Indent sub-clause continuations
+    for (const kw of SQL_INDENT_KW) {
+        s = s.replace(new RegExp(`\\b${kw}\\b`, "gi"), `\n    ${kw} `);
+    }
+
+    // Split into lines, trim trailing spaces, drop blanks
+    const lines = s
+        .split("\n")
+        .map((l) => l.trimEnd())
+        .filter(Boolean);
+
+    // Expand SELECT column list — one column per indented line
+    const out = [];
+    for (const line of lines) {
+        const trimmed = line.trimStart();
+        if (/^SELECT\s+/i.test(trimmed)) {
+            const rest = trimmed.replace(/^SELECT\s+/i, "").trim();
+            if (rest) {
+                const cols = splitTopLevelCommas(rest);
+                if (cols.length > 1) {
+                    out.push("SELECT");
+                    cols.forEach((col, idx) => {
+                        out.push(`    ${col}${idx < cols.length - 1 ? "," : ""}`);
+                    });
+                    continue;
+                }
+            }
+        }
+        // Preserve leading indent on AND/OR/ON lines; strip others
+        out.push(line.startsWith("    ") ? line : trimmed);
+    }
+
+    return out.join("\n").trim();
+}
+
+/**
+ * Build HTML with syntax-highlight spans from already-formatted plain SQL.
+ * Operates character-by-character so strings/comments are never miscoloured.
+ */
+function highlightSql(formatted) {
+    let html = "";
+    let i = 0;
+    const s = formatted;
+
+    while (i < s.length) {
+        // Preserve newlines and spaces as-is
+        if (s[i] === "\n") { html += "\n"; i++; continue; }
+        if (s[i] === " " || s[i] === "\t") {
+            let j = i;
+            while (j < s.length && (s[j] === " " || s[j] === "\t")) j++;
+            html += s.slice(i, j);
+            i = j;
+            continue;
+        }
+
+        // Line comment  -- ...
+        if (s[i] === "-" && s[i + 1] === "-") {
+            let j = i;
+            while (j < s.length && s[j] !== "\n") j++;
+            html += `<span class="sql-cmt">${escapeHtml(s.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // Block comment  /* ... */
+        if (s[i] === "/" && s[i + 1] === "*") {
+            let j = i + 2;
+            while (j < s.length - 1 && !(s[j] === "*" && s[j + 1] === "/")) j++;
+            j += 2;
+            html += `<span class="sql-cmt">${escapeHtml(s.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // Single-quoted string  '...' ('' = escaped quote)
+        if (s[i] === "'") {
+            let j = i + 1;
+            while (j < s.length) {
+                if (s[j] === "'") {
+                    if (s[j + 1] === "'") { j += 2; continue; }
+                    break;
+                }
+                j++;
+            }
+            j++;
+            html += `<span class="sql-str">${escapeHtml(s.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // Quoted identifier  "..." or `...`
+        if (s[i] === '"' || s[i] === "`") {
+            const close = s[i];
+            let j = i + 1;
+            while (j < s.length && s[j] !== close) j++;
+            j++;
+            html += `<span class="sql-ident">${escapeHtml(s.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // Number (integer or decimal)
+        if (/[0-9]/.test(s[i])) {
+            let j = i;
+            while (j < s.length && /[0-9.]/.test(s[j])) j++;
+            html += `<span class="sql-num">${escapeHtml(s.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // Word → keyword, function, or plain identifier
+        if (/[a-zA-Z_]/.test(s[i])) {
+            let j = i;
+            while (j < s.length && /[a-zA-Z0-9_]/.test(s[j])) j++;
+            const word = s.slice(i, j);
+            const upper = word.toUpperCase();
+            // Peek ahead past spaces to see if '(' follows → function call
+            let k = j;
+            while (k < s.length && s[k] === " ") k++;
+            const isFunc = s[k] === "(";
+            if (SQL_KW_SET.has(upper)) {
+                const cls = isFunc ? "sql-fn" : "sql-kw";
+                html += `<span class="${cls}">${escapeHtml(word)}</span>`;
+            } else {
+                html += escapeHtml(word);
+            }
+            i = j;
+            continue;
+        }
+
+        // Everything else (operators, punctuation, semicolons)
+        html += escapeHtml(s[i]);
+        i++;
+    }
+
+    return html;
+}
+
+/** Collect hint keys present in the formatted SQL. */
 function collectSqlHints(formatted) {
     const out = [];
-    for (const kw of SQL_KEYWORDS_ORDERED) {
-        if (!SQL_HINTS[kw]) continue;
-        const pattern = `\\b${kw.replace(/\s+/g, "\\s+")}\\b`;
-        if (new RegExp(pattern, "i").test(formatted)) out.push(kw);
+    for (const kw of Object.keys(SQL_HINTS)) {
+        const pat = `\\b${kw.replace(/\s+/g, "\\s+")}\\b`;
+        if (new RegExp(pat, "i").test(formatted)) out.push(kw);
     }
     return out;
 }
 
 function initSqlTool() {
-    const ta = document.getElementById("sql-in");
-    const pre = document.getElementById("sql-out");
-    const fmt = document.getElementById("sql-format");
-    const cpy = document.getElementById("sql-copy");
+    const ta    = document.getElementById("sql-in");
+    const pre   = document.getElementById("sql-out");
+    const fmt   = document.getElementById("sql-format");
+    const cpy   = document.getElementById("sql-copy");
     const hints = document.getElementById("sql-hint-list");
     if (!ta || !pre || !fmt || !hints) return;
 
     function run() {
         const formatted = formatSql(ta.value);
-        pre.textContent = formatted;
+        // innerHTML for colours; textContent (used by copy) strips tags automatically
+        pre.innerHTML = highlightSql(formatted);
         const keys = collectSqlHints(formatted);
         hints.innerHTML = keys.length
-            ? keys.map((k) => `<li><code>${escapeHtml(k)}</code> — ${SQL_HINTS[k] || ""}</li>`).join("")
+            ? keys
+                  .map((k) => `<li><code>${escapeHtml(k)}</code> — ${SQL_HINTS[k] || ""}</li>`)
+                  .join("")
             : '<li style="border:none">No major keywords detected — paste a fuller query.</li>';
     }
 
@@ -416,9 +593,7 @@ function initSqlTool() {
     cpy.addEventListener("click", async () => {
         try {
             await navigator.clipboard.writeText(pre.textContent || "");
-        } catch {
-            /* ignore */
-        }
+        } catch { /* ignore */ }
     });
     run();
 }

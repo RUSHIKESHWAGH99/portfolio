@@ -444,7 +444,7 @@
             </div>
             <div id="tool-panel-sql" class="tool-panel" hidden>
                 <h3>SQL formatter + keyword hints</h3>
-                <p class="tool-hint">Formatting is heuristic (keywords on new lines). Hints are static reference blurbs — not AI-generated.</p>
+                <p class="tool-hint">Indents SELECT columns one-per-line, AND / OR / ON under their clause, and colour-highlights keywords, functions, strings, and numbers. Heuristic — works well for standard analytical SQL. Copy button outputs plain text.</p>
                 <div class="sql-io">
                     <textarea id="sql-in" spellcheck="false" placeholder="Paste SQL here…">select u.id, o.total from users u join orders o on o.user_id = u.id where o.created_at &gt;= '2024-01-01' group by u.id, o.total order by o.total desc limit 100;</textarea>
                     <pre id="sql-out" aria-label="Formatted SQL"></pre>
