@@ -450,36 +450,36 @@
             </div>
         </header>
         <div class="tool-switcher" role="tablist" aria-label="Choose a tool">
-            <button type="button" class="tool-switch active" data-tool="ab" aria-selected="true">A/B test calculator</button>
-            <button type="button" class="tool-switch" data-tool="sample" aria-selected="false">Sample size</button>
+            <button type="button" class="tool-switch active" data-tool="ab" aria-selected="true">A/B testing</button>
             <button type="button" class="tool-switch" data-tool="json" aria-selected="false">JSON formatter</button>
             <button type="button" class="tool-switch" data-tool="sql" aria-selected="false">SQL formatter</button>
             <button type="button" class="tool-switch" data-tool="cohort" aria-selected="false">Cohort table (CSV)</button>
         </div>
         <div class="tool-panels-wrap">
             <div id="tool-panel-ab" class="tool-panel">
-                <h3>Two-proportion z-test (conversion A vs B)</h3>
-                <p class="tool-hint">Enter visitors and conversions for each variant. Uses a pooled proportion z-test (large-sample normal approximation). For small samples, treat as directional only.</p>
+                <h3>Significance test</h3>
+                <p class="tool-hint">Two-proportion z-test. Enter visitors and conversions for each variant. Large-sample normal approximation — for small samples, treat as directional only.</p>
                 <div class="form-grid">
                     <div class="form-field"><label for="ab-vis-a">Visitors A</label><input id="ab-vis-a" type="number" min="1" value="10000" /></div>
                     <div class="form-field"><label for="ab-conv-a">Conversions A</label><input id="ab-conv-a" type="number" min="0" value="1200" /></div>
                     <div class="form-field"><label for="ab-vis-b">Visitors B</label><input id="ab-vis-b" type="number" min="1" value="10000" /></div>
                     <div class="form-field"><label for="ab-conv-b">Conversions B</label><input id="ab-conv-b" type="number" min="0" value="1270" /></div>
-                    <div class="form-field"><label for="ab-alpha">Significance α (two-sided)</label>
+                    <div class="form-field"><label for="ab-alpha">Significance &alpha; (two-sided)</label>
                         <select id="ab-alpha">
-                            <option value="0.10">90% confidence (α = 0.10)</option>
-                            <option value="0.05" selected>95% confidence (α = 0.05)</option>
-                            <option value="0.01">99% confidence (α = 0.01)</option>
+                            <option value="0.10">90% confidence (&alpha; = 0.10)</option>
+                            <option value="0.05" selected>95% confidence (&alpha; = 0.05)</option>
+                            <option value="0.01">99% confidence (&alpha; = 0.01)</option>
                         </select>
                     </div>
                 </div>
                 <button type="button" class="btn-tool" id="ab-calc">Calculate</button>
                 <div id="ab-out" class="ab-results" hidden></div>
                 <div id="ab-err" class="tool-error" hidden></div>
-            </div>
-            <div id="tool-panel-sample" class="tool-panel" hidden>
+
+                <div class="ab-divider"></div>
+
                 <h3>Sample size calculator</h3>
-                <p class="tool-hint">How many users per variant do you need? Enter your baseline conversion rate, the minimum detectable effect (MDE), desired power, and significance level.</p>
+                <p class="tool-hint">How many users per variant do you need before running the test? Enter your baseline conversion rate, minimum detectable effect (MDE), desired power, and significance level.</p>
                 <div class="form-grid">
                     <div class="form-field"><label for="ss-baseline">Baseline rate (%)</label><input id="ss-baseline" type="number" min="0.01" max="99.99" step="0.01" value="5" /></div>
                     <div class="form-field"><label for="ss-mde">Min. detectable effect (%)</label><input id="ss-mde" type="number" min="0.01" step="0.01" value="10" /></div>

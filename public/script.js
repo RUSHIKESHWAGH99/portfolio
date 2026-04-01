@@ -808,7 +808,7 @@ function initTheme() {
 // ── Tool sub-tabs ─────────────────────────────────────────────
 function initToolSwitcher() {
     const tabs = document.querySelectorAll(".tool-switch");
-    const panelIds = ["ab", "sample", "cohort", "json", "sql"];
+    const panelIds = ["ab", "json", "sql", "cohort"];
     const panels = {};
     panelIds.forEach((id) => { panels[id] = document.getElementById(`tool-panel-${id}`); });
     if (!tabs.length) return;

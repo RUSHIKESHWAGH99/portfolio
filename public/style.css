@@ -885,6 +885,12 @@ body {
     background: transparent; border: 1px solid var(--border); color: var(--text);
 }
 
+.ab-divider {
+    margin: 36px 0 32px;
+    border: none; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+}
+
 .ab-results, .tool-error {
     margin-top: 20px; padding: 18px; border-radius: 10px;
     background: var(--bg-alt); border: 1px solid var(--border);
