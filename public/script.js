@@ -1060,12 +1060,11 @@ function initSqlQuiz() {
             })
             .then(({ ok, data }) => {
                 if (ok && data.ok) {
-                    emailStatus.textContent =
-                        "Results emailed to you (check spam). Rushikesh received a copy.";
+                    emailStatus.textContent = "Results emailed to you (check spam).";
                     emailStatus.className = "sql-quiz-email-status is-ok";
                 } else if (data.code === "MISSING_RESEND") {
                     emailStatus.textContent =
-                        "Email is not configured on the server yet — ask the site owner to add RESEND_API_KEY on Vercel.";
+                        "Email is not configured on the server yet — RESEND_API_KEY must be set in Vercel.";
                     emailStatus.className = "sql-quiz-email-status is-err";
                 } else {
                     emailStatus.textContent =

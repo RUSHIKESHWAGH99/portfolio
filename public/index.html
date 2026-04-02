@@ -795,12 +795,15 @@
     <section class="section" id="fun">
         <div class="container">
             <h2 class="section-title reveal">Fun</h2>
-            <p class="section-subtitle reveal">Test yourself with a 10-question SQL quiz drawn at random from a 500-question pool.</p>
+            <p class="section-subtitle reveal">The Query Gauntlet — ten questions, one timer, five hundred possibilities in the vault.</p>
 
             <div id="sql-quiz-app" class="sql-quiz-app reveal">
                 <div id="sql-quiz-reg" class="sql-quiz-panel">
-                    <h3 class="sql-quiz-title">SQL MCQ challenge</h3>
-                    <p class="sql-quiz-lead">Topics include fundamentals, JOINs, aggregates, window functions, CTEs, indexes, and optimization. You have <strong>10 minutes</strong> for all 10 questions. Question text cannot be copied during the quiz. Enter your details to begin — we will email your score to you and to Rushikesh.</p>
+                    <header class="sql-quiz-header">
+                        <h3 class="sql-quiz-title"><span class="sql-quiz-title-main">The Query Gauntlet</span></h3>
+                        <p class="sql-quiz-monikers" aria-label="Also known as">Clause <span class="sql-quiz-mid-dot">&amp;</span> Effect · Syntax Circuit · The JOIN Tribunal</p>
+                    </header>
+                    <p class="sql-quiz-lead">Fundamentals through window functions, CTEs, indexes, and tuning — drawn from a 500-question vault. <strong>10 minutes</strong> on the clock. Copy is disabled during play. Add your name and email to begin; your score summary goes to your inbox.</p>
                     <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
                         <div class="form-grid">
                             <div class="form-field">
@@ -812,7 +815,7 @@
                                 <input id="sql-quiz-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
                             </div>
                         </div>
-                        <p class="sql-quiz-privacy">By starting, you agree to receive one email with your quiz results. The same summary is sent to the site owner.</p>
+                        <p class="sql-quiz-privacy">By starting, you agree to receive one email with your quiz results.</p>
                         <button type="submit" class="btn-tool" id="sql-quiz-start">Start quiz</button>
                         <p id="sql-quiz-load-err" class="tool-error" hidden></p>
                     </form>
