@@ -795,7 +795,7 @@
     <section class="section" id="fun">
         <div class="container">
             <h2 class="section-title reveal">Fun</h2>
-            <p class="section-subtitle reveal">The Query Gauntlet — ten questions, one timer, read real SQL and spot the answer.</p>
+            <p class="section-subtitle reveal">Analytics games for data people — SQL quiz, daily word game &amp; metric blitz.</p>
 
             <div id="sql-quiz-app" class="sql-quiz-app">
                 <div id="sql-quiz-reg" class="sql-quiz-panel">
@@ -803,7 +803,7 @@
                         <h3 class="sql-quiz-title"><span class="sql-quiz-title-main">The Query Gauntlet</span></h3>
                         <p class="sql-quiz-monikers" aria-label="Also known as">Clause <span class="sql-quiz-mid-dot">&amp;</span> Effect · Syntax Circuit · The JOIN Tribunal</p>
                     </header>
-                    <p class="sql-quiz-lead">5 concept questions + 5 read-the-query challenges — spot errors, predict output, and judge SQL behaviour across NULLs, JOINs, window functions, indexes, and CTEs. <strong>10 minutes</strong> on the clock. Copy is disabled during play. Add your name and email to begin; after the quiz you can <strong>download your certificate</strong> or <strong>share on LinkedIn</strong>.</p>
+                    <p class="sql-quiz-lead">10 questions · 10 minutes · no lifelines. Read real SQL, spot errors, predict output. Enter your name and go — certificate at the finish line.</p>
                     <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
                         <div class="form-grid">
                             <div class="form-field">
@@ -859,6 +859,44 @@
                     <button type="button" class="btn-tool secondary" id="sql-quiz-retry">Try again</button>
                 </div>
             </div>
+
+            <!-- ── More games ──────────────────────────────── -->
+            <div class="fun-games-row">
+
+                <!-- SQL Word — daily Wordle for SQL keywords -->
+                <div class="fun-game-card reveal" id="sqlword-card">
+                    <span class="fun-game-badge">Daily · resets at midnight</span>
+                    <h3 class="fun-game-title">SQL Word</h3>
+                    <p class="fun-game-desc">Guess the 5-letter SQL / data keyword. 6 tries. New word every day.</p>
+                    <div id="sw-grid" class="sw-grid" role="group" aria-label="Guess grid"></div>
+                    <div id="sw-keyboard" class="sw-keyboard" aria-label="On-screen keyboard"></div>
+                    <p id="sw-message" class="sw-message" aria-live="polite"></p>
+                    <button type="button" class="btn-tool secondary sw-share-btn" id="sw-share" hidden>Copy result ↗</button>
+                </div>
+
+                <!-- Metric Blitz — 5-question speed round -->
+                <div class="fun-game-card reveal" id="metricblitz-card">
+                    <span class="fun-game-badge">Blitz · 30 seconds</span>
+                    <h3 class="fun-game-title">Metric Blitz</h3>
+                    <p class="fun-game-desc">5 KPI &amp; SQL questions. 30 seconds on the clock. No looking it up.</p>
+                    <div id="mb-reg" class="mb-state">
+                        <button type="button" class="btn-tool" id="mb-start">Start Blitz</button>
+                    </div>
+                    <div id="mb-play" class="mb-state" hidden>
+                        <div class="mb-hdr">
+                            <span id="mb-qnum" class="mb-qnum">Q1 / 5</span>
+                            <span id="mb-timer" class="mb-timer">0:30</span>
+                        </div>
+                        <p id="mb-question" class="mb-question"></p>
+                        <div id="mb-options" class="mb-options"></div>
+                    </div>
+                    <div id="mb-results" class="mb-state" hidden>
+                        <p id="mb-score-line" class="mb-score-line"></p>
+                        <button type="button" class="btn-tool secondary" id="mb-retry">Play again</button>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </section>
     </div>
@@ -878,6 +916,6 @@
         </div>
     </footer>
 
-    <script src="script.js?v=quiz5"></script>
+    <script src="script.js?v=quiz6"></script>
 </body>
 </html>

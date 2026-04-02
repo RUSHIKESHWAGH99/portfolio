@@ -1502,6 +1502,360 @@ function initSiteRevisionLabel() {
 }
 
 // ── Boot ────────────────────────────────────────────────────
+// ── SQL Word (daily Wordle for SQL / data keywords) ──────────
+
+/**
+ * Initialises the SQL Word game — a Wordle-style daily word puzzle
+ * using 5-letter SQL and analytics terms. One new word per day.
+ */
+function initSqlWord() {
+    const WORDS = [
+        "QUERY", "PIVOT", "INDEX", "UNION", "LIMIT",
+        "COUNT", "DENSE", "NTILE", "ALIAS", "TABLE",
+        "RANGE", "CROSS", "NULLS", "FLOAT", "CHART",
+        "TREND", "ALPHA", "EPOCH", "BATCH", "INNER",
+        "OUTER", "GROUP", "PARSE", "DELTA", "SLICE",
+        "GRANT", "CLEAN", "STATS", "PANEL", "POWER",
+    ];
+
+    const gridEl   = document.getElementById("sw-grid");
+    const kbEl     = document.getElementById("sw-keyboard");
+    const msgEl    = document.getElementById("sw-message");
+    const shareBtn = document.getElementById("sw-share");
+    if (!gridEl || !kbEl || !msgEl) return;
+
+    // Derive today's word from a fixed epoch so everyone shares the same word.
+    const epoch   = new Date("2026-04-01T00:00:00");
+    const todayMs = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+    const dayIndex = Math.max(0, Math.floor((todayMs - epoch.getTime()) / 86400000));
+    const TARGET   = WORDS[dayIndex % WORDS.length];
+
+    const ROWS = 6, COLS = 5;
+    let currentRow = 0, currentCol = 0;
+    const board        = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
+    const guessResults = /** @type {string[][]} */ ([]);
+    const letterStates = /** @type {Record<string,string>} */ ({});
+    let done = false;
+
+    // Build grid cells
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement("div");
+            cell.className = "sw-cell";
+            cell.id = `sw-${r}-${c}`;
+            gridEl.appendChild(cell);
+        }
+    }
+
+    // Build on-screen keyboard
+    [
+        ["Q","W","E","R","T","Y","U","I","O","P"],
+        ["A","S","D","F","G","H","J","K","L"],
+        ["ENTER","Z","X","C","V","B","N","M","⌫"],
+    ].forEach((row) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "sw-key-row";
+        row.forEach((key) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "sw-key" + (key.length > 1 ? " wide" : "");
+            btn.textContent = key;
+            btn.dataset.swKey = key;
+            btn.addEventListener("click", () => handleSwKey(key));
+            rowEl.appendChild(btn);
+        });
+        kbEl.appendChild(rowEl);
+    });
+
+    /** @param {number} r @param {number} c @returns {HTMLElement|null} */
+    function swCell(r, c) {
+        return document.getElementById(`sw-${r}-${c}`);
+    }
+
+    /**
+     * Update a cell's letter and trigger pop animation.
+     * @param {number} r
+     * @param {number} c
+     * @param {string} letter
+     */
+    function updateSwCell(r, c, letter) {
+        const el = swCell(r, c);
+        if (!el) return;
+        el.textContent = letter;
+        if (letter) {
+            el.dataset.letter = letter;
+            el.classList.add("sw-pop");
+            setTimeout(() => el.classList.remove("sw-pop"), 160);
+        } else {
+            delete el.dataset.letter;
+        }
+    }
+
+    /**
+     * Show a transient message.
+     * @param {string} text
+     * @param {number} [duration=2400] - 0 to persist.
+     */
+    function showSwMsg(text, duration) {
+        if (!msgEl) return;
+        msgEl.textContent = text;
+        const ms = duration === undefined ? 2400 : duration;
+        if (ms > 0) setTimeout(() => { if (msgEl.textContent === text) msgEl.textContent = ""; }, ms);
+    }
+
+    /**
+     * Handle a key press (letter, ENTER, or backspace).
+     * @param {string} key
+     */
+    function handleSwKey(key) {
+        if (done) return;
+        if (key === "⌫" || key === "BACKSPACE") {
+            if (currentCol > 0) {
+                currentCol--;
+                board[currentRow][currentCol] = "";
+                updateSwCell(currentRow, currentCol, "");
+            }
+        } else if (key === "ENTER") {
+            submitSwGuess();
+        } else if (/^[A-Z]$/.test(key) && currentCol < COLS) {
+            board[currentRow][currentCol] = key;
+            updateSwCell(currentRow, currentCol, key);
+            currentCol++;
+        }
+    }
+
+    /**
+     * Score a 5-letter guess against the target.
+     * @param {string} guess
+     * @returns {string[]} array of "sw-correct" | "sw-present" | "sw-absent"
+     */
+    function scoreSwGuess(guess) {
+        const result   = Array(COLS).fill("sw-absent");
+        const remaining = TARGET.split("");
+        // First pass — exact matches
+        for (let i = 0; i < COLS; i++) {
+            if (guess[i] === TARGET[i]) {
+                result[i]      = "sw-correct";
+                remaining[i]   = "";
+            }
+        }
+        // Second pass — wrong-position matches
+        for (let i = 0; i < COLS; i++) {
+            if (result[i] !== "sw-absent") continue;
+            const idx = remaining.indexOf(guess[i]);
+            if (idx !== -1) {
+                result[i]     = "sw-present";
+                remaining[idx] = "";
+            }
+        }
+        return result;
+    }
+
+    function submitSwGuess() {
+        if (currentCol < COLS) { showSwMsg("Not enough letters"); return; }
+        const guess  = board[currentRow].join("");
+        const result = scoreSwGuess(guess);
+        guessResults.push(result);
+
+        // Flip cells with a cascade delay
+        result.forEach((cls, c) => {
+            setTimeout(() => {
+                const el = swCell(currentRow, c);
+                if (el) el.classList.add(cls);
+            }, c * 100);
+        });
+
+        // Update letter-state map (correct > present > absent)
+        const rankMap = { "sw-correct": 3, "sw-present": 2, "sw-absent": 1 };
+        result.forEach((cls, c) => {
+            const letter = guess[c];
+            const cur    = letterStates[letter];
+            if (!cur || (rankMap[cls] || 0) > (rankMap[cur] || 0)) {
+                letterStates[letter] = cls;
+            }
+        });
+        setTimeout(refreshSwKeyboard, COLS * 100 + 60);
+
+        const won = guess === TARGET;
+        if (won || currentRow === ROWS - 1) {
+            done = true;
+            const msgs = ["🔥 Genius!", "💡 Magnificent!", "✨ Impressive!", "👏 Splendid!", "🎉 Great!", "😅 Phew!"];
+            setTimeout(() => {
+                showSwMsg(won ? (msgs[currentRow] || "Correct!") : `The word was ${TARGET}`, 0);
+                if (shareBtn) shareBtn.hidden = false;
+            }, COLS * 100 + 220);
+        }
+
+        currentRow++;
+        currentCol = 0;
+    }
+
+    function refreshSwKeyboard() {
+        kbEl.querySelectorAll(".sw-key[data-sw-key]").forEach((btn) => {
+            const k = /** @type {HTMLElement} */ (btn).dataset.swKey || "";
+            if (k.length === 1 && letterStates[k]) {
+                btn.classList.remove("sw-correct", "sw-present", "sw-absent");
+                btn.classList.add(letterStates[k]);
+            }
+        });
+    }
+
+    // Physical keyboard — only intercept when fun tab is open and no text field is focused
+    document.addEventListener("keydown", (e) => {
+        if (document.getElementById("view-fun")?.hasAttribute("hidden")) return;
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+        const k = e.key.toUpperCase();
+        if (k === "BACKSPACE") { e.preventDefault(); handleSwKey("⌫"); }
+        else if (k === "ENTER") handleSwKey("ENTER");
+        else if (/^[A-Z]$/.test(k)) handleSwKey(k);
+    });
+
+    // Share button — copy emoji grid to clipboard
+    if (shareBtn) {
+        shareBtn.addEventListener("click", () => {
+            const emojiMap = { "sw-correct": "🟩", "sw-present": "🟨", "sw-absent": "⬛" };
+            const gridText = guessResults
+                .map((row) => row.map((s) => emojiMap[s] || "⬛").join(""))
+                .join("\n");
+            const wonRow  = guessResults.findIndex((r) => r.every((s) => s === "sw-correct"));
+            const result  = wonRow >= 0 ? `${wonRow + 1}/${ROWS}` : `X/${ROWS}`;
+            const word    = String(dayIndex % WORDS.length + 1);
+            const text    = `SQL Word #${word} ${result}\n\n${gridText}\n\nrushikeshwagh.vercel.app/#fun`;
+            navigator.clipboard.writeText(text)
+                .then(() => showSwMsg("Copied to clipboard!"))
+                .catch(() => showSwMsg("Copy not supported in this browser"));
+        });
+    }
+}
+
+// ── Metric Blitz (5-question KPI speed round) ────────────────
+
+/**
+ * Initialises the Metric Blitz game — 5 analytics / SQL questions
+ * answered in 30 seconds, no backend required.
+ */
+function initMetricBlitz() {
+    const QUESTIONS = [
+        {
+            q: "CTR (Click-Through Rate) formula:",
+            opts: ["Conversions / Sessions", "Clicks / Impressions", "Sessions / Users", "Clicks / Conversions"],
+            ans: 1,
+        },
+        {
+            q: "Total MRR = $50,000 · Active users = 2,000. ARPU = ?",
+            opts: ["$10", "$100", "$25", "$40"],
+            ans: 2,
+        },
+        {
+            q: "p-value = 0.03, significance level α = 0.05. The A/B result is:",
+            opts: ["Not significant — fail to reject null", "Statistically significant — reject null", "Needs more data to decide", "Inconclusive — run it longer"],
+            ans: 1,
+        },
+        {
+            q: "Which SQL window function assigns ranks with NO GAPS when there are ties?",
+            opts: ["RANK()", "ROW_NUMBER()", "DENSE_RANK()", "NTILE(1)"],
+            ans: 2,
+        },
+        {
+            q: "Day-30 cohort retention = ?",
+            opts: [
+                "Sessions on day 30 / Day-1 sessions",
+                "Users active on day 30 / Users who joined that cohort",
+                "Revenue on day 30 / Revenue on day 1",
+                "New users on day 30 / All-time users",
+            ],
+            ans: 1,
+        },
+    ];
+
+    const TOTAL_SECS = 30;
+
+    const startBtn  = document.getElementById("mb-start");
+    const regEl     = document.getElementById("mb-reg");
+    const playEl    = document.getElementById("mb-play");
+    const resEl     = document.getElementById("mb-results");
+    const qnumEl    = document.getElementById("mb-qnum");
+    const timerEl   = document.getElementById("mb-timer");
+    const qEl       = document.getElementById("mb-question");
+    const optsEl    = document.getElementById("mb-options");
+    const scoreEl   = document.getElementById("mb-score-line");
+    const retryBtn  = document.getElementById("mb-retry");
+    if (!startBtn || !regEl || !playEl || !resEl) return;
+
+    let qi = 0, score = 0, secsLeft = TOTAL_SECS;
+    let timerId = /** @type {number|null} */ (null);
+    let answered = false;
+
+    function startBlitz() {
+        qi = 0; score = 0; secsLeft = TOTAL_SECS; answered = false;
+        regEl.hidden = true;
+        resEl.hidden = true;
+        playEl.hidden = false;
+        if (timerEl) { timerEl.textContent = `0:${TOTAL_SECS}`; timerEl.classList.remove("mb-hurry"); }
+        clearInterval(timerId ?? undefined);
+        timerId = window.setInterval(tickTimer, 1000);
+        renderMbQuestion();
+    }
+
+    function tickTimer() {
+        secsLeft--;
+        if (timerEl) {
+            timerEl.textContent = `0:${String(secsLeft).padStart(2, "0")}`;
+            timerEl.classList.toggle("mb-hurry", secsLeft <= 8);
+        }
+        if (secsLeft <= 0) { clearInterval(timerId ?? undefined); showMbResults(); }
+    }
+
+    function renderMbQuestion() {
+        if (qi >= QUESTIONS.length) { clearInterval(timerId ?? undefined); showMbResults(); return; }
+        answered = false;
+        const q = QUESTIONS[qi];
+        if (qnumEl) qnumEl.textContent = `Q${qi + 1} / ${QUESTIONS.length}`;
+        if (qEl)    qEl.textContent = q.q;
+        if (optsEl) {
+            optsEl.innerHTML = "";
+            q.opts.forEach((opt, i) => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "mb-opt";
+                btn.textContent = opt;
+                btn.addEventListener("click", () => pickMbAnswer(i));
+                optsEl.appendChild(btn);
+            });
+        }
+    }
+
+    /**
+     * Handle an option selection, highlight correct/wrong, then advance.
+     * @param {number} chosen
+     */
+    function pickMbAnswer(chosen) {
+        if (answered) return;
+        answered = true;
+        const q = QUESTIONS[qi];
+        optsEl?.querySelectorAll(".mb-opt").forEach((btn, idx) => {
+            /** @type {HTMLButtonElement} */ (btn).disabled = true;
+            if (idx === q.ans) btn.classList.add("mb-correct");
+            else if (idx === chosen) btn.classList.add("mb-wrong");
+        });
+        if (chosen === q.ans) score++;
+        setTimeout(() => { qi++; renderMbQuestion(); }, 720);
+    }
+
+    function showMbResults() {
+        clearInterval(timerId ?? undefined);
+        playEl.hidden = true;
+        resEl.hidden  = false;
+        const msgs = ["😅 Keep studying!", "📖 Getting there!", "👍 Decent!", "💡 Sharp!", "🔥 Perfect!"];
+        const msg  = msgs[Math.min(score, msgs.length - 1)];
+        if (scoreEl) scoreEl.textContent = `${score} / ${QUESTIONS.length}  —  ${msg}`;
+    }
+
+    startBtn.addEventListener("click", startBlitz);
+    retryBtn?.addEventListener("click", startBlitz);
+}
+
 initTheme();
 initViews();
 initReveal();
@@ -1515,4 +1869,6 @@ initJsonFormatter();
 initSqlTool();
 initToolSwitcher();
 initSqlQuiz();
+initSqlWord();
+initMetricBlitz();
 initSiteRevisionLabel();
