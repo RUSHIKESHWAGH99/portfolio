@@ -3,11 +3,17 @@
  *
  * Env (Vercel project settings):
  *   RESEND_API_KEY   — required (https://resend.com)
- *   RESEND_FROM      — optional, default "Portfolio Quiz <onboarding@resend.dev>"
- *   QUIZ_OWNER_EMAIL — optional copy to you; default rushikeshwagh43@gmail.com
+ *   RESEND_FROM      — optional; must use an address on your verified domain in Resend
+ *   QUIZ_OWNER_EMAIL — optional BCC; default rushikeshwagh43@gmail.com
+ *
+ * The participant's address is always in `to`. `from` must match Resend's verified domain
+ * or Resend will not deliver to arbitrary inboxes.
  */
 
 const OWNER_DEFAULT = "rushikeshwagh43@gmail.com";
+
+/** Default From — must match the domain string shown as verified in Resend (override with RESEND_FROM if yours differs). */
+const DEFAULT_RESEND_FROM = "Rushikesh Portfolio <quiz@rushikesh.wagh>";
 
 const TOPIC_LABELS = {
     basics: "SQL fundamentals & clauses",
@@ -67,7 +73,7 @@ export default async function handler(req, res) {
     }
 
     const key = process.env.RESEND_API_KEY;
-    const from = process.env.RESEND_FROM || "Portfolio Quiz <onboarding@resend.dev>";
+    const from = (process.env.RESEND_FROM || DEFAULT_RESEND_FROM).trim();
     const ownerEmail = (process.env.QUIZ_OWNER_EMAIL || OWNER_DEFAULT).trim();
 
     if (!key) {
@@ -139,6 +145,7 @@ export default async function handler(req, res) {
                 from,
                 to: [email],
                 bcc: [ownerEmail],
+                reply_to: ownerEmail,
                 subject,
                 html,
             }),

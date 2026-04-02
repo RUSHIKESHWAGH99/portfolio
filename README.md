@@ -88,7 +88,7 @@ The Fun tab can email quiz results to the participant and BCC **rushikeshwagh43@
 1. Create a Resend API key and add it in Vercel → Project → Settings → Environment Variables:
    - `RESEND_API_KEY` — required
 2. Optional overrides:
-   - `RESEND_FROM` — e.g. `Portfolio Quiz <quiz@yourdomain.com>` (verify domain in Resend; `onboarding@resend.dev` only works for testing to verified addresses)
+   - `RESEND_FROM` — optional; defaults to `Rushikesh Portfolio <quiz@rushikesh.wagh>`. It **must** match whatever domain Resend shows as verified (if yours is e.g. `rushikeshwagh.com`, set `RESEND_FROM` to `Rushikesh Portfolio <quiz@rushikeshwagh.com>` in Vercel).
    - `QUIZ_OWNER_EMAIL` — defaults to rushikeshwagh43@gmail.com
 
 Regenerate the question pool after editing `scripts/generate-sql-quiz.mjs`:
