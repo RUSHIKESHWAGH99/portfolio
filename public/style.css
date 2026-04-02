@@ -1159,9 +1159,15 @@ body {
 .sql-quiz-topics-list {
     margin: 0; padding-left: 20px; color: var(--text); line-height: 1.7; font-size: 0.92rem;
 }
-.sql-quiz-email-status { font-size: 0.85rem; color: var(--text-dim); margin: 20px 0 16px; min-height: 1.4em; }
+.sql-quiz-email-status { font-size: 0.85rem; color: var(--text-dim); margin: 20px 0 12px; min-height: 1.4em; }
 .sql-quiz-email-status.is-ok { color: var(--accent-2); }
 .sql-quiz-email-status.is-err { color: #f78c6c; }
+.sql-quiz-share-row {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center;
+}
+.sql-quiz-copy-hint {
+    font-size: 0.82rem; color: var(--accent-2); margin: -8px 0 16px;
+}
 .sql-quiz-pro-card {
     text-align: center; padding: 32px 24px; margin-bottom: 28px;
     border-radius: 16px; border: 2px solid var(--accent);

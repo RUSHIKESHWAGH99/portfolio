@@ -829,6 +829,9 @@ function initTheme() {
 /** Total seconds allowed for all 10 questions. */
 const SQL_QUIZ_TIME_SEC = 600;
 
+/** Portfolio page shared on LinkedIn (Fun tab). */
+const QUIZ_SHARE_URL = "https://rushikeshwagh.vercel.app/#fun";
+
 function shuffleInPlace(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -864,6 +867,13 @@ function initSqlQuiz() {
     const emailStatus = document.getElementById("sql-quiz-email-status");
     const proScoreEl = document.getElementById("sql-quiz-pro-score");
     const resultHeading = document.getElementById("sql-quiz-result-heading");
+    const btnDownload = document.getElementById("sql-quiz-download");
+    const btnLinkedIn = document.getElementById("sql-quiz-linkedin");
+    const btnCopyBlurb = document.getElementById("sql-quiz-copy-blurb");
+    const copyHint = document.getElementById("sql-quiz-copy-hint");
+
+    /** @type {null | { name: string, email: string, score: number, tier: string, topicLines: string[], timedOut: boolean, atIso: string }} */
+    let lastScoreSnapshot = null;
 
     let pool = null;
     let topicLabels = {};
@@ -986,6 +996,59 @@ function initSqlQuiz() {
         return "beginner";
     }
 
+    /**
+     * Human-readable tier label for downloads and blurbs.
+     *
+     * @param {string} tier
+     * @returns {string}
+     */
+    function tierDisplayName(tier) {
+        if (tier === "pro") return "Professional analyst level";
+        if (tier === "intermediate") return "Intermediate";
+        if (tier === "novice") return "Developing (between beginner & intermediate)";
+        return "Beginner";
+    }
+
+    /**
+     * Plain-text score card for download.
+     *
+     * @param {{ name: string, email: string, score: number, tier: string, topicLines: string[], timedOut: boolean, atIso: string }} snap
+     * @returns {string}
+     */
+    function buildScoreDownloadText(snap) {
+        const lines = [
+            "THE QUERY GAUNTLET — SCORE SUMMARY",
+            "================================",
+            "",
+            `Name:  ${snap.name}`,
+            `Email: ${snap.email}`,
+            `Score: ${snap.score} / 10`,
+            `Level: ${tierDisplayName(snap.tier)}`,
+            `When:  ${snap.atIso}`,
+            "",
+        ];
+        if (snap.timedOut) lines.push("Note: Quiz ended when the timer reached zero.", "");
+        if (snap.topicLines.length) {
+            lines.push("Topics to review (from missed questions):", ...snap.topicLines.map((t) => `  • ${t}`), "");
+        }
+        lines.push(`Quiz: ${QUIZ_SHARE_URL}`, "", "— rushikeshwagh.vercel.app");
+        return lines.join("\n");
+    }
+
+    /**
+     * Short post for LinkedIn (user can paste or edit).
+     *
+     * @param {{ name: string, score: number, tier: string }} snap
+     * @returns {string}
+     */
+    function buildLinkedInBlurb(snap) {
+        const level = tierDisplayName(snap.tier);
+        return (
+            `I scored ${snap.score}/10 on The Query Gauntlet — a timed SQL quiz (JOINs, window functions, CTEs, optimization & more). ` +
+            `Level: ${level}. Try it here: ${QUIZ_SHARE_URL}`
+        );
+    }
+
     function finishQuiz() {
         if (quizCompleted) return;
         quizCompleted = true;
@@ -1038,7 +1101,19 @@ function initSqlQuiz() {
             topicsBlock.hidden = true;
         }
 
-        emailStatus.textContent = "Sending results to your inbox…";
+        const topicLines = uniqueWrong.map((key) => topicLabels[key] || key);
+        lastScoreSnapshot = {
+            name: participantName,
+            email: participantEmail,
+            score,
+            tier,
+            topicLines,
+            timedOut: endedByTimer,
+            atIso: new Date().toISOString(),
+        };
+
+        if (copyHint) copyHint.hidden = true;
+        emailStatus.textContent = "Recording your attempt…";
         emailStatus.className = "sql-quiz-email-status";
 
         fetch("/api/send-quiz-email", {
@@ -1060,22 +1135,64 @@ function initSqlQuiz() {
             })
             .then(({ ok, data }) => {
                 if (ok && data.ok) {
-                    emailStatus.textContent = "Results emailed to you (check spam).";
+                    emailStatus.textContent = "Thanks — your attempt was recorded. Download or share your score below.";
                     emailStatus.className = "sql-quiz-email-status is-ok";
                 } else if (data.code === "MISSING_RESEND") {
                     emailStatus.textContent =
-                        "Email is not configured on the server yet — RESEND_API_KEY must be set in Vercel.";
+                        "Server email is not configured — your score is still yours: download or share below.";
                     emailStatus.className = "sql-quiz-email-status is-err";
                 } else {
                     emailStatus.textContent =
-                        data.error || "Could not send email — your score is shown above.";
+                        data.error || "Could not log your attempt on the server — you can still download or share below.";
                     emailStatus.className = "sql-quiz-email-status is-err";
                 }
             })
             .catch(() => {
-                emailStatus.textContent = "Could not send email — your score is shown above.";
+                emailStatus.textContent = "Could not reach the server — you can still download or share your score below.";
                 emailStatus.className = "sql-quiz-email-status is-err";
             });
+    }
+
+    if (btnDownload) {
+        btnDownload.addEventListener("click", () => {
+            if (!lastScoreSnapshot) return;
+            const text = buildScoreDownloadText(lastScoreSnapshot);
+            const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `query-gauntlet-score-${lastScoreSnapshot.score}-of-10.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    if (btnLinkedIn) {
+        btnLinkedIn.addEventListener("click", () => {
+            const share = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(QUIZ_SHARE_URL)}`;
+            window.open(share, "_blank", "noopener,noreferrer");
+        });
+    }
+
+    if (btnCopyBlurb) {
+        btnCopyBlurb.addEventListener(async () => {
+            if (!lastScoreSnapshot) return;
+            const blurb = buildLinkedInBlurb(lastScoreSnapshot);
+            try {
+                await navigator.clipboard.writeText(blurb);
+                if (copyHint) {
+                    copyHint.hidden = false;
+                    copyHint.textContent = "Copied suggested post text — paste into LinkedIn.";
+                }
+            } catch {
+                if (copyHint) {
+                    copyHint.hidden = false;
+                    copyHint.textContent = "Could not copy automatically — select and copy manually from a note app.";
+                }
+            }
+        });
     }
 
     form.addEventListener("submit", async (e) => {
@@ -1139,6 +1256,8 @@ function initSqlQuiz() {
             timerEl.classList.remove("is-low", "is-critical");
             updateTimerDisplay();
         }
+        lastScoreSnapshot = null;
+        if (copyHint) copyHint.hidden = true;
         emailStatus.textContent = "";
         emailStatus.className = "sql-quiz-email-status";
     });

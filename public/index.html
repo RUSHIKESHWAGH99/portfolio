@@ -803,7 +803,7 @@
                         <h3 class="sql-quiz-title"><span class="sql-quiz-title-main">The Query Gauntlet</span></h3>
                         <p class="sql-quiz-monikers" aria-label="Also known as">Clause <span class="sql-quiz-mid-dot">&amp;</span> Effect · Syntax Circuit · The JOIN Tribunal</p>
                     </header>
-                    <p class="sql-quiz-lead">Fundamentals through window functions, CTEs, indexes, and tuning — drawn from a 500-question vault. <strong>10 minutes</strong> on the clock. Copy is disabled during play. Add your name and email to begin; your score summary goes to your inbox.</p>
+                    <p class="sql-quiz-lead">Fundamentals through window functions, CTEs, indexes, and tuning — drawn from a 500-question vault. <strong>10 minutes</strong> on the clock. Copy is disabled during play. Add your name and email to begin; after the quiz you can <strong>download your score</strong> or <strong>share on LinkedIn</strong>.</p>
                     <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
                         <div class="form-grid">
                             <div class="form-field">
@@ -815,7 +815,7 @@
                                 <input id="sql-quiz-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
                             </div>
                         </div>
-                        <p class="sql-quiz-privacy">By starting, you agree to receive one email with your quiz results.</p>
+                        <p class="sql-quiz-privacy">Your name and email are used to log your attempt and to generate your score card. We do not email your results to you right now — use download or LinkedIn share after you finish.</p>
                         <button type="submit" class="btn-tool" id="sql-quiz-start">Start quiz</button>
                         <p id="sql-quiz-load-err" class="tool-error" hidden></p>
                     </form>
@@ -850,6 +850,12 @@
                         </div>
                     </div>
                     <p id="sql-quiz-email-status" class="sql-quiz-email-status" aria-live="polite"></p>
+                    <div id="sql-quiz-share-row" class="sql-quiz-share-row">
+                        <button type="button" class="btn-tool" id="sql-quiz-download">Download score (.txt)</button>
+                        <button type="button" class="btn-tool secondary" id="sql-quiz-linkedin">Share on LinkedIn</button>
+                        <button type="button" class="btn-tool secondary" id="sql-quiz-copy-blurb">Copy post text</button>
+                    </div>
+                    <p id="sql-quiz-copy-hint" class="sql-quiz-copy-hint" hidden>Copied — paste into LinkedIn if the share window did not open.</p>
                     <button type="button" class="btn-tool secondary" id="sql-quiz-retry">Try again</button>
                 </div>
             </div>

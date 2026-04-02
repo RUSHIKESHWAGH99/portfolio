@@ -1,19 +1,16 @@
 /**
- * Vercel serverless: emails SQL quiz results via Resend.
+ * Vercel serverless: notifies site owner of a quiz attempt via Resend.
+ * Participant does not receive email (they download / share from the UI).
  *
- * Env (Vercel project settings):
- *   RESEND_API_KEY   — required (https://resend.com)
- *   RESEND_FROM      — optional; must use an address on your verified domain in Resend
- *   QUIZ_OWNER_EMAIL — optional BCC; default rushikeshwagh43@gmail.com
- *
- * The participant's address is always in `to`. `from` must match Resend's verified domain
- * or Resend will not deliver to arbitrary inboxes.
+ * Env:
+ *   RESEND_API_KEY   — required
+ *   RESEND_FROM      — verified domain sender
+ *   QUIZ_OWNER_EMAIL — recipient; default rushikeshwagh43@gmail.com
  */
 
 const OWNER_DEFAULT = "rushikeshwagh43@gmail.com";
-
-/** Default From — must match the domain string shown as verified in Resend (override with RESEND_FROM if yours differs). */
 const DEFAULT_RESEND_FROM = "Rushikesh Portfolio <quiz@rushikesh.wagh>";
+const SITE_URL = "https://rushikeshwagh.vercel.app";
 
 const TOPIC_LABELS = {
     basics: "SQL fundamentals & clauses",
@@ -42,8 +39,13 @@ function escapeHtml(t) {
         .replace(/"/g, "&quot;");
 }
 
-function buildHtml({ name, email, score, total, tier, topicsLines, summaryLine, timedOut }) {
-    const safeName = escapeHtml(name);
+/**
+ * HTML body for the owner notification email.
+ *
+ * @param {object} p
+ * @returns {string}
+ */
+function buildOwnerHtml({ name, email, score, total, tier, topicsLines, timedOut }) {
     const tierLabel =
         tier === "pro"
             ? "Professional analyst level"
@@ -54,15 +56,15 @@ function buildHtml({ name, email, score, total, tier, topicsLines, summaryLine, 
                 : "Beginner";
 
     return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111">
-<p>Hi ${safeName},</p>
-<p><strong>Your SQL quiz score:</strong> ${score} / ${total}</p>
-${timedOut ? "<p><em>Quiz ended automatically when the timer reached zero.</em></p>" : ""}
-<p><strong>Level:</strong> ${escapeHtml(tierLabel)}</p>
-<p>${escapeHtml(summaryLine)}</p>
-${topicsLines.length ? `<p><strong>Topics to review:</strong></p><ul>${topicsLines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` : ""}
-<p style="margin-top:24px;color:#555;font-size:14px">— Rushikesh Wagh · Portfolio quiz<br/>
-<a href="https://rushikeshwagh.vercel.app">rushikeshwagh.vercel.app</a></p>
-<p style="font-size:12px;color:#888">Submitted as: ${escapeHtml(email)}</p>
+<p><strong>The Query Gauntlet</strong> — new attempt</p>
+<p><strong>Name:</strong> ${escapeHtml(name)}<br/>
+<strong>Email:</strong> ${escapeHtml(email)}<br/>
+<strong>Score:</strong> ${score} / ${total}<br/>
+<strong>Level:</strong> ${escapeHtml(tierLabel)}</p>
+${timedOut ? "<p><em>Timer reached zero before submit.</em></p>" : ""}
+${topicsLines.length ? `<p><strong>Topics missed (review areas):</strong></p><ul>${topicsLines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` : "<p><em>No topic gaps (perfect or topics not tagged).</em></p>"}
+<p style="margin-top:20px;font-size:14px;color:#555"><a href="${SITE_URL}/#fun">${SITE_URL}/#fun</a></p>
+<p style="font-size:12px;color:#888">Reply-To is set to the participant if your client supports it.</p>
 </body></html>`;
 }
 
@@ -112,27 +114,17 @@ export default async function handler(req, res) {
     const uniqueTopics = [...new Set(wrongTopicKeys.filter((k) => typeof k === "string"))];
     const topicsLines = uniqueTopics.map((k) => TOPIC_LABELS[k] || k);
 
-    const summaryLine =
-        tier === "pro"
-            ? "Outstanding — strong command of analytical SQL."
-            : tier === "intermediate"
-              ? "Solid foundation — you are close to professional analyst level. Keep drilling edge cases."
-              : tier === "novice"
-                ? "You are one step away from intermediate — review the topics below and try again."
-                : "Keep practicing the areas below to move up to intermediate.";
-
-    const html = buildHtml({
+    const html = buildOwnerHtml({
         name,
         email,
         score,
         total,
         tier,
         topicsLines,
-        summaryLine,
         timedOut,
     });
 
-    const subject = `Your SQL quiz: ${score}/${total}${timedOut ? " (timed out)" : ""} (${tier === "pro" ? "Pro" : tier === "intermediate" ? "Intermediate" : "Keep learning"})`;
+    const subject = `[Query Gauntlet] ${name} — ${score}/${total} — ${email}`;
 
     try {
         const r = await fetch("https://api.resend.com/emails", {
@@ -143,9 +135,8 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 from,
-                to: [email],
-                bcc: [ownerEmail],
-                reply_to: ownerEmail,
+                to: [ownerEmail],
+                reply_to: email,
                 subject,
                 html,
             }),

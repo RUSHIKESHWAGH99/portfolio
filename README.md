@@ -3,7 +3,7 @@
 **[rushikeshwagh.vercel.app](https://rushikeshwagh.vercel.app)**
 
 Product Analyst with 4+ years across Dunzo, FloBiz, and ALLEN Digital.  
-This repo is the source for my personal portfolio — a static site (HTML / CSS / JS, no framework, no build step) with tabbed sections, in-browser analytics tools, and a SQL quiz on the Fun tab (optional email via Vercel + Resend).
+This repo is the source for my personal portfolio — a static site (HTML / CSS / JS, no framework, no build step) with tabbed sections, in-browser analytics tools, and a SQL quiz on the Fun tab (owner notification via Resend; participants download / LinkedIn share).
 
 ---
 
@@ -83,7 +83,7 @@ One-click copy to clipboard.
 
 ## SQL quiz email (Vercel)
 
-The Fun tab can email quiz results to the participant and BCC **rushikeshwagh43@gmail.com** using [Resend](https://resend.com).
+After each attempt, `api/send-quiz-email.js` emails **only you** (default **rushikeshwagh43@gmail.com**) with the participant’s name, email, score, level, and missed topics. `Reply-To` is set to the participant’s address. Participants get a **.txt download** and **LinkedIn share** buttons instead of an email.
 
 1. Create a Resend API key and add it in Vercel → Project → Settings → Environment Variables:
    - `RESEND_API_KEY` — required
@@ -104,7 +104,7 @@ node scripts/generate-sql-quiz.mjs
 - **HTML / CSS / JS** — no framework, no build step, no npm for the static site
 - **Vercel** — static files from `public/` plus `/api` serverless routes
 - **Tools** — 100% client-side in the browser
-- **SQL quiz email** — `api/send-quiz-email.js` + Resend
+- **SQL quiz notify** — `api/send-quiz-email.js` + Resend (owner only)
 
 ---
 
