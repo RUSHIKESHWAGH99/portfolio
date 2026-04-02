@@ -1068,29 +1068,148 @@ function initSqlQuiz() {
     }
 
     /**
-     * Plain-text score card for download.
+     * Draws a score certificate on an off-screen canvas (2× for crisp screens).
      *
-     * @param {{ name: string, email: string, score: number, tier: string, topicLines: string[], timedOut: boolean, atIso: string }} snap
-     * @returns {string}
+     * @param {{ name: string, score: number, tier: string, timedOut: boolean, atIso: string }} snap
+     * @returns {HTMLCanvasElement}
      */
-    function buildScoreDownloadText(snap) {
-        const lines = [
-            "THE QUERY GAUNTLET — SCORE SUMMARY",
-            "================================",
-            "",
-            `Name:  ${snap.name}`,
-            `Email: ${snap.email}`,
-            `Score: ${snap.score} / 10`,
-            `Level: ${tierDisplayName(snap.tier)}`,
-            `When:  ${snap.atIso}`,
-            "",
-        ];
-        if (snap.timedOut) lines.push("Note: Quiz ended when the timer reached zero.", "");
-        if (snap.topicLines.length) {
-            lines.push("Topics to review (from missed questions):", ...snap.topicLines.map((t) => `  • ${t}`), "");
+    function buildCertificateCanvas(snap) {
+        const W = 900, H = 560;
+        const DPR = 2;
+        const canvas = document.createElement("canvas");
+        canvas.width = W * DPR;
+        canvas.height = H * DPR;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return canvas;
+        ctx.scale(DPR, DPR);
+
+        /** Draw a rounded rectangle path. */
+        function rrect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
         }
-        lines.push(`Quiz: ${QUIZ_SHARE_URL}`, "", "— rushikeshwagh.vercel.app");
-        return lines.join("\n");
+
+        /** Draw a horizontal fade-in/out rule centred on W/2. */
+        function hRule(y, alpha) {
+            const lw = 260;
+            const g = ctx.createLinearGradient(W / 2 - lw, y, W / 2 + lw, y);
+            g.addColorStop(0, "rgba(124,106,255,0)");
+            g.addColorStop(0.5, `rgba(124,106,255,${alpha})`);
+            g.addColorStop(1, "rgba(124,106,255,0)");
+            ctx.strokeStyle = g;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(W / 2 - lw, y);
+            ctx.lineTo(W / 2 + lw, y);
+            ctx.stroke();
+        }
+
+        // ── background ───────────────────────────────────────
+        ctx.fillStyle = "#0d0d18";
+        ctx.fillRect(0, 0, W, H);
+
+        // Subtle central glow
+        const glow = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 340);
+        glow.addColorStop(0, "rgba(124,106,255,0.07)");
+        glow.addColorStop(1, "rgba(124,106,255,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+
+        // ── outer border ─────────────────────────────────────
+        ctx.strokeStyle = "#7c6aff";
+        ctx.lineWidth = 2.5;
+        rrect(6, 6, W - 12, H - 12, 14);
+        ctx.stroke();
+
+        // ── inner border ─────────────────────────────────────
+        ctx.strokeStyle = "rgba(124,106,255,0.25)";
+        ctx.lineWidth = 1;
+        rrect(18, 18, W - 36, H - 36, 10);
+        ctx.stroke();
+
+        // ── corner diamonds ───────────────────────────────────
+        ctx.fillStyle = "rgba(124,106,255,0.7)";
+        [[30, 30], [W - 30, 30], [30, H - 30], [W - 30, H - 30]].forEach(([cx, cy]) => {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(Math.PI / 4);
+            ctx.fillRect(-4, -4, 8, 8);
+            ctx.restore();
+        });
+
+        // ── title ────────────────────────────────────────────
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#9d8fff";
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "4px";
+        ctx.font = "700 12px system-ui,-apple-system,sans-serif";
+        ctx.fillText("THE QUERY GAUNTLET", W / 2, 58);
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+
+        hRule(76, 0.7);
+
+        // ── subtitle ─────────────────────────────────────────
+        ctx.fillStyle = "rgba(210,210,255,0.45)";
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "3px";
+        ctx.font = "400 10px system-ui,sans-serif";
+        ctx.fillText("CERTIFICATE OF ACHIEVEMENT", W / 2, 100);
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+
+        // ── "This certifies that" ────────────────────────────
+        ctx.fillStyle = "rgba(200,200,230,0.5)";
+        ctx.font = "italic 400 15px Georgia,'Times New Roman',serif";
+        ctx.fillText("This certifies that", W / 2, 148);
+
+        // ── name ─────────────────────────────────────────────
+        ctx.fillStyle = "#ffffff";
+        const nfs = snap.name.length > 24 ? 36 : snap.name.length > 18 ? 42 : 50;
+        ctx.font = `italic 600 ${nfs}px Georgia,'Times New Roman',serif`;
+        ctx.fillText(snap.name, W / 2, 208);
+
+        hRule(234, 0.35);
+
+        // ── "achieved a score of" ────────────────────────────
+        ctx.fillStyle = "rgba(200,200,230,0.45)";
+        ctx.font = "400 14px system-ui,sans-serif";
+        ctx.fillText("achieved a score of", W / 2, 264);
+
+        // ── score ─────────────────────────────────────────────
+        ctx.fillStyle = "#7c6aff";
+        ctx.font = "700 78px system-ui,-apple-system,sans-serif";
+        ctx.fillText(`${snap.score} / 10`, W / 2, 340);
+
+        // ── tier ──────────────────────────────────────────────
+        ctx.fillStyle = "rgba(200,200,240,0.6)";
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "1.5px";
+        ctx.font = "600 13px system-ui,sans-serif";
+        ctx.fillText(tierDisplayName(snap.tier).toUpperCase(), W / 2, 382);
+        if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+
+        hRule(408, 0.35);
+
+        // ── date ──────────────────────────────────────────────
+        const dateStr = new Date(snap.atIso).toLocaleDateString("en-US", {
+            year: "numeric", month: "long", day: "numeric",
+        });
+        ctx.fillStyle = "rgba(200,200,230,0.35)";
+        ctx.font = "400 12px system-ui,sans-serif";
+        ctx.fillText(dateStr, W / 2, 440);
+
+        // ── url ───────────────────────────────────────────────
+        ctx.fillStyle = "rgba(124,106,255,0.5)";
+        ctx.font = "400 11px system-ui,sans-serif";
+        ctx.fillText("rushikeshwagh.vercel.app/#fun", W / 2, 510);
+
+        return canvas;
     }
 
     /**
@@ -1201,7 +1320,7 @@ function initSqlQuiz() {
                     emailStatus.className = "sql-quiz-email-status is-err";
                 } else {
                     emailStatus.textContent =
-                        data.error || "Could not log your attempt on the server — you can still download or share below.";
+                        "Could not log your attempt on the server — you can still download or share below.";
                     emailStatus.className = "sql-quiz-email-status is-err";
                 }
             })
@@ -1214,16 +1333,18 @@ function initSqlQuiz() {
     if (btnDownload) {
         btnDownload.addEventListener("click", () => {
             if (!lastScoreSnapshot) return;
-            const text = buildScoreDownloadText(lastScoreSnapshot);
-            const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `query-gauntlet-score-${lastScoreSnapshot.score}-of-10.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const certCanvas = buildCertificateCanvas(lastScoreSnapshot);
+            certCanvas.toBlob((blob) => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `query-gauntlet-certificate-${lastScoreSnapshot.score}-of-10.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, "image/png");
         });
     }
 

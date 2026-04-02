@@ -9,7 +9,7 @@
  */
 
 const OWNER_DEFAULT = "rushikeshwagh43@gmail.com";
-const DEFAULT_RESEND_FROM = "Rushikesh Portfolio <quiz@rushikesh.wagh>";
+const DEFAULT_RESEND_FROM = "Rushikesh Portfolio <onboarding@resend.dev>";
 const SITE_URL = "https://rushikeshwagh.vercel.app";
 
 const TOPIC_LABELS = {
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
             console.error("Resend error", r.status, data);
             return res.status(502).json({
                 ok: false,
-                error: data.message || "Email provider rejected the request",
+                error: "Email service temporarily unavailable",
                 code: "RESEND_ERROR",
             });
         }
