@@ -3,7 +3,7 @@
 **[rushikeshwagh.vercel.app](https://rushikeshwagh.vercel.app)**
 
 Product Analyst with 4+ years across Dunzo, FloBiz, and ALLEN Digital.  
-This repo is the source for my personal portfolio — a static site (HTML / CSS / JS, no framework, no build step) with five sections and three free in-browser analytics tools.
+This repo is the source for my personal portfolio — a static site (HTML / CSS / JS, no framework, no build step) with tabbed sections, in-browser analytics tools, and a SQL quiz on the Fun tab (optional email via Vercel + Resend).
 
 ---
 
@@ -74,15 +74,37 @@ One-click copy to clipboard.
 | **Journey** | About me, how I work, full experience timeline |
 | **Tools** | A/B calculator, cohort heatmap, SQL formatter |
 | **Projects** | 6 open-source ML & analytics repos |
-| **Skills** | Tech stack + contact |
+| **Skills** | Tech stack |
+| **Contact** | Links + resume |
+| **Blogs** | Placeholder |
+| **Fun** | SQL MCQ quiz (10 questions from a 500-question pool) |
+
+---
+
+## SQL quiz email (Vercel)
+
+The Fun tab can email quiz results to the participant and BCC **rushikeshwagh43@gmail.com** using [Resend](https://resend.com).
+
+1. Create a Resend API key and add it in Vercel → Project → Settings → Environment Variables:
+   - `RESEND_API_KEY` — required
+2. Optional overrides:
+   - `RESEND_FROM` — e.g. `Portfolio Quiz <quiz@yourdomain.com>` (verify domain in Resend; `onboarding@resend.dev` only works for testing to verified addresses)
+   - `QUIZ_OWNER_EMAIL` — defaults to rushikeshwagh43@gmail.com
+
+Regenerate the question pool after editing `scripts/generate-sql-quiz.mjs`:
+
+```bash
+node scripts/generate-sql-quiz.mjs
+```
 
 ---
 
 ## Stack
 
-- **HTML / CSS / JS** — no framework, no build step, no npm
-- **Vercel** — static deploy via `outputDirectory: public`
-- **100% client-side** — every tool runs in the browser tab, nothing touches a server
+- **HTML / CSS / JS** — no framework, no build step, no npm for the static site
+- **Vercel** — static files from `public/` plus `/api` serverless routes
+- **Tools** — 100% client-side in the browser
+- **SQL quiz email** — `api/send-quiz-email.js` + Resend
 
 ---
 

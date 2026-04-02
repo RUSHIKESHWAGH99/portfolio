@@ -795,12 +795,56 @@
     <section class="section" id="fun">
         <div class="container">
             <h2 class="section-title reveal">Fun</h2>
-            <p class="section-subtitle reveal">Quizzes and mini-games to test your analytics thinking — in a fun way.</p>
-            <div class="coming-soon-wrap reveal">
-                <div class="coming-soon-card">
-                    <span class="coming-soon-icon">🎮</span>
-                    <h3>Coming Soon</h3>
-                    <p>Analytics quizzes, SQL puzzles, and stat-based mini-games are in the works. Come back soon!</p>
+            <p class="section-subtitle reveal">Test yourself with a 10-question SQL quiz drawn at random from a 500-question pool.</p>
+
+            <div id="sql-quiz-app" class="sql-quiz-app reveal">
+                <div id="sql-quiz-reg" class="sql-quiz-panel">
+                    <h3 class="sql-quiz-title">SQL MCQ challenge</h3>
+                    <p class="sql-quiz-lead">Topics include fundamentals, JOINs, aggregates, window functions, CTEs, indexes, and optimization. Enter your details to begin — we will email your score to you and to Rushikesh.</p>
+                    <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="sql-quiz-name">Name</label>
+                                <input id="sql-quiz-name" name="name" type="text" required autocomplete="name" maxlength="120" placeholder="Your name" />
+                            </div>
+                            <div class="form-field">
+                                <label for="sql-quiz-email">Email</label>
+                                <input id="sql-quiz-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+                            </div>
+                        </div>
+                        <p class="sql-quiz-privacy">By starting, you agree to receive one email with your quiz results. The same summary is sent to the site owner.</p>
+                        <button type="submit" class="btn-tool" id="sql-quiz-start">Start quiz</button>
+                        <p id="sql-quiz-load-err" class="tool-error" hidden></p>
+                    </form>
+                </div>
+
+                <div id="sql-quiz-play" class="sql-quiz-panel" hidden>
+                    <div class="sql-quiz-progress"><span id="sql-quiz-progress-label">Question 1 / 10</span></div>
+                    <div id="sql-quiz-q-wrap" class="sql-quiz-q-wrap"></div>
+                    <div class="sql-quiz-nav">
+                        <button type="button" class="btn-tool secondary" id="sql-quiz-prev" hidden>Back</button>
+                        <button type="button" class="btn-tool" id="sql-quiz-next">Next</button>
+                    </div>
+                </div>
+
+                <div id="sql-quiz-results" class="sql-quiz-panel" hidden>
+                    <div id="sql-quiz-pro-card" class="sql-quiz-pro-card" hidden>
+                        <span class="sql-quiz-pro-badge">🏆 Pro analyst</span>
+                        <h3>Congratulations!</h3>
+                        <p>You scored <strong id="sql-quiz-pro-score"></strong>. You are operating at <strong>professional analyst</strong> level on this SQL set.</p>
+                    </div>
+                    <div id="sql-quiz-result-standard">
+                        <h3 id="sql-quiz-result-heading">Your results</h3>
+                        <p id="sql-quiz-score-line" class="sql-quiz-score-line"></p>
+                        <p id="sql-quiz-tier-msg" class="sql-quiz-tier-msg"></p>
+                        <div id="sql-quiz-topics-block" hidden>
+                            <h4 class="sql-quiz-subh">Topics to improve</h4>
+                            <p class="sql-quiz-topics-intro">Based on the questions you missed, spend time on:</p>
+                            <ul id="sql-quiz-topics-list" class="sql-quiz-topics-list"></ul>
+                        </div>
+                    </div>
+                    <p id="sql-quiz-email-status" class="sql-quiz-email-status" aria-live="polite"></p>
+                    <button type="button" class="btn-tool secondary" id="sql-quiz-retry">Try again</button>
                 </div>
             </div>
         </div>

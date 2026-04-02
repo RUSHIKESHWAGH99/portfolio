@@ -1073,3 +1073,65 @@ body {
     -webkit-text-fill-color: transparent; background-clip: text;
 }
 .coming-soon-card p { color: var(--text-dim); line-height: 1.7; font-size: 0.95rem; }
+
+/* ── SQL quiz (Fun tab) ───────────────────────────────────── */
+.sql-quiz-app {
+    max-width: 640px; margin: 0 auto; padding: 8px 0 48px;
+}
+.sql-quiz-panel {
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px 24px 32px;
+    background: rgba(124, 106, 255, 0.04);
+}
+.sql-quiz-title { font-size: 1.35rem; margin-bottom: 10px; font-weight: 700; }
+.sql-quiz-lead, .sql-quiz-privacy {
+    font-size: 0.88rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 18px;
+}
+.sql-quiz-privacy { font-size: 0.78rem; margin-top: 8px; margin-bottom: 16px; opacity: 0.9; }
+.sql-quiz-reg-form .btn-tool { margin-top: 8px; }
+.sql-quiz-progress {
+    font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); margin-bottom: 16px;
+}
+.sql-quiz-q-wrap { margin-bottom: 24px; }
+.sql-quiz-q-text {
+    font-size: 1.02rem; line-height: 1.55; margin-bottom: 18px; color: var(--text);
+}
+.sql-quiz-options { display: flex; flex-direction: column; gap: 10px; }
+.sql-quiz-opt {
+    display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.12); transition: border-color 0.15s, background 0.15s;
+}
+[data-theme="light"] .sql-quiz-opt { background: rgba(255, 255, 255, 0.6); }
+.sql-quiz-opt:hover { border-color: var(--accent); }
+.sql-quiz-opt input { margin-top: 3px; accent-color: var(--accent); }
+.sql-quiz-opt span { font-size: 0.9rem; line-height: 1.45; }
+.sql-quiz-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.sql-quiz-score-line { font-size: 1.15rem; font-weight: 600; margin: 12px 0; }
+.sql-quiz-tier-msg { color: var(--text-dim); line-height: 1.65; margin-bottom: 20px; }
+.sql-quiz-subh { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 8px; }
+.sql-quiz-topics-intro { font-size: 0.88rem; color: var(--text-dim); margin-bottom: 10px; }
+.sql-quiz-topics-list {
+    margin: 0; padding-left: 20px; color: var(--text); line-height: 1.7; font-size: 0.92rem;
+}
+.sql-quiz-email-status { font-size: 0.85rem; color: var(--text-dim); margin: 20px 0 16px; min-height: 1.4em; }
+.sql-quiz-email-status.is-ok { color: var(--accent-2); }
+.sql-quiz-email-status.is-err { color: #f78c6c; }
+.sql-quiz-pro-card {
+    text-align: center; padding: 32px 24px; margin-bottom: 28px;
+    border-radius: 16px; border: 2px solid var(--accent);
+    background: linear-gradient(145deg, rgba(124, 106, 255, 0.15), rgba(0, 224, 176, 0.08));
+    box-shadow: 0 8px 32px rgba(124, 106, 255, 0.2);
+}
+.sql-quiz-pro-badge {
+    display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; padding: 6px 12px; border-radius: 999px;
+    background: var(--gradient); color: #fff; margin-bottom: 14px;
+}
+.sql-quiz-pro-card h3 {
+    font-size: 1.75rem; margin-bottom: 12px;
+    background: var(--gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text;
+}
+.sql-quiz-pro-card p { color: var(--text-dim); line-height: 1.65; font-size: 0.95rem; }

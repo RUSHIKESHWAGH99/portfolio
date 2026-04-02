@@ -825,6 +825,237 @@ function initTheme() {
     });
 }
 
+// ── SQL quiz (Fun tab) ───────────────────────────────────────
+function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+/**
+ * Wires the 10-question SQL MCQ flow: registration, play, results, email via API.
+ */
+function initSqlQuiz() {
+    const app = document.getElementById("sql-quiz-app");
+    if (!app) return;
+
+    const regPanel = document.getElementById("sql-quiz-reg");
+    const playPanel = document.getElementById("sql-quiz-play");
+    const resPanel = document.getElementById("sql-quiz-results");
+    const form = document.getElementById("sql-quiz-reg-form");
+    const loadErr = document.getElementById("sql-quiz-load-err");
+    const qWrap = document.getElementById("sql-quiz-q-wrap");
+    const progLabel = document.getElementById("sql-quiz-progress-label");
+    const btnPrev = document.getElementById("sql-quiz-prev");
+    const btnNext = document.getElementById("sql-quiz-next");
+    const btnRetry = document.getElementById("sql-quiz-retry");
+    const proCard = document.getElementById("sql-quiz-pro-card");
+    const resultStandard = document.getElementById("sql-quiz-result-standard");
+    const scoreLine = document.getElementById("sql-quiz-score-line");
+    const tierMsg = document.getElementById("sql-quiz-tier-msg");
+    const topicsBlock = document.getElementById("sql-quiz-topics-block");
+    const topicsList = document.getElementById("sql-quiz-topics-list");
+    const emailStatus = document.getElementById("sql-quiz-email-status");
+    const proScoreEl = document.getElementById("sql-quiz-pro-score");
+    const resultHeading = document.getElementById("sql-quiz-result-heading");
+
+    let pool = null;
+    let topicLabels = {};
+    let selected = [];
+    let answers = [];
+    let qIndex = 0;
+    let participantName = "";
+    let participantEmail = "";
+
+    async function ensurePool() {
+        if (pool) return;
+        const r = await fetch("/data/sql-quiz.json");
+        if (!r.ok) throw new Error("load");
+        const data = await r.json();
+        pool = data.questions;
+        topicLabels = data.topicLabels || {};
+    }
+
+    function renderQuestion() {
+        const q = selected[qIndex];
+        progLabel.textContent = `Question ${qIndex + 1} / 10`;
+        qWrap.innerHTML = "";
+        const p = document.createElement("p");
+        p.className = "sql-quiz-q-text";
+        p.textContent = q.q;
+        qWrap.appendChild(p);
+        const opts = document.createElement("div");
+        opts.className = "sql-quiz-options";
+        q.options.forEach((text, oi) => {
+            const lab = document.createElement("label");
+            lab.className = "sql-quiz-opt";
+            const inp = document.createElement("input");
+            inp.type = "radio";
+            inp.name = "sql-quiz-opt";
+            inp.value = String(oi);
+            if (answers[qIndex] === oi) inp.checked = true;
+            inp.addEventListener("change", () => {
+                answers[qIndex] = oi;
+            });
+            const sp = document.createElement("span");
+            sp.textContent = text;
+            lab.appendChild(inp);
+            lab.appendChild(sp);
+            opts.appendChild(lab);
+        });
+        qWrap.appendChild(opts);
+        btnPrev.hidden = qIndex === 0;
+        btnNext.textContent = qIndex === 9 ? "Submit" : "Next";
+    }
+
+    function computeTier(score) {
+        if (score >= 9) return "pro";
+        if (score >= 6) return "intermediate";
+        if (score === 5) return "novice";
+        return "beginner";
+    }
+
+    function finishQuiz() {
+        let score = 0;
+        const wrongTopicKeys = [];
+        selected.forEach((q, i) => {
+            if (answers[i] === q.answer) score += 1;
+            else wrongTopicKeys.push(q.topic);
+        });
+        const uniqueWrong = [...new Set(wrongTopicKeys)];
+        const tier = computeTier(score);
+
+        playPanel.hidden = true;
+        resPanel.hidden = false;
+
+        proCard.hidden = tier !== "pro";
+        resultStandard.hidden = false;
+        resultHeading.textContent = tier === "pro" ? "Summary" : "Your results";
+        scoreLine.textContent = `You scored ${score} / 10.`;
+        if (tier === "pro" && proScoreEl) proScoreEl.textContent = `${score}/10`;
+
+        if (tier === "beginner") {
+            tierMsg.textContent =
+                "You are at a beginner level on this quiz. Use the topic list below to guide what to study next.";
+        } else if (tier === "novice") {
+            tierMsg.textContent =
+                "You are between beginner and intermediate — review the topics below and aim for 6+ correct to reach intermediate.";
+        } else if (tier === "intermediate") {
+            tierMsg.textContent =
+                "You are intermediate and close to professional analyst level. Sharpen the areas below to close the gap.";
+        } else {
+            tierMsg.textContent = "Strong performance across analytical SQL concepts.";
+        }
+
+        topicsList.innerHTML = "";
+        if (uniqueWrong.length) {
+            topicsBlock.hidden = false;
+            uniqueWrong.forEach((key) => {
+                const li = document.createElement("li");
+                li.textContent = topicLabels[key] || key;
+                topicsList.appendChild(li);
+            });
+        } else {
+            topicsBlock.hidden = true;
+        }
+
+        emailStatus.textContent = "Sending results to your inbox…";
+        emailStatus.className = "sql-quiz-email-status";
+
+        fetch("/api/send-quiz-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: participantName,
+                email: participantEmail,
+                score,
+                totalQuestions: 10,
+                tier,
+                wrongTopicKeys: uniqueWrong,
+            }),
+        })
+            .then(async (r) => {
+                const data = await r.json().catch(() => ({}));
+                return { ok: r.ok, data };
+            })
+            .then(({ ok, data }) => {
+                if (ok && data.ok) {
+                    emailStatus.textContent =
+                        "Results emailed to you (check spam). Rushikesh received a copy.";
+                    emailStatus.className = "sql-quiz-email-status is-ok";
+                } else if (data.code === "MISSING_RESEND") {
+                    emailStatus.textContent =
+                        "Email is not configured on the server yet — ask the site owner to add RESEND_API_KEY on Vercel.";
+                    emailStatus.className = "sql-quiz-email-status is-err";
+                } else {
+                    emailStatus.textContent =
+                        data.error || "Could not send email — your score is shown above.";
+                    emailStatus.className = "sql-quiz-email-status is-err";
+                }
+            })
+            .catch(() => {
+                emailStatus.textContent = "Could not send email — your score is shown above.";
+                emailStatus.className = "sql-quiz-email-status is-err";
+            });
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        loadErr.hidden = true;
+        participantName = document.getElementById("sql-quiz-name").value.trim();
+        participantEmail = document.getElementById("sql-quiz-email").value.trim();
+        try {
+            await ensurePool();
+        } catch {
+            loadErr.textContent = "Could not load quiz data. Please refresh and try again.";
+            loadErr.hidden = false;
+            return;
+        }
+        const copy = [...pool];
+        shuffleInPlace(copy);
+        selected = copy.slice(0, 10);
+        answers = selected.map(() => null);
+        qIndex = 0;
+        regPanel.hidden = true;
+        playPanel.hidden = false;
+        renderQuestion();
+    });
+
+    btnPrev.addEventListener("click", () => {
+        if (qIndex > 0) {
+            qIndex -= 1;
+            renderQuestion();
+        }
+    });
+
+    btnNext.addEventListener("click", () => {
+        if (answers[qIndex] === null || answers[qIndex] === undefined) {
+            window.alert("Please choose one answer before continuing.");
+            return;
+        }
+        if (qIndex < 9) {
+            qIndex += 1;
+            renderQuestion();
+        } else {
+            finishQuiz();
+        }
+    });
+
+    btnRetry.addEventListener("click", () => {
+        resPanel.hidden = true;
+        playPanel.hidden = true;
+        regPanel.hidden = false;
+        form.reset();
+        selected = [];
+        answers = [];
+        pool = null;
+        emailStatus.textContent = "";
+        emailStatus.className = "sql-quiz-email-status";
+    });
+}
+
 // ── Tool sub-tabs ─────────────────────────────────────────────
 function initToolSwitcher() {
     const tabs = document.querySelectorAll(".tool-switch");
@@ -861,3 +1092,4 @@ initCohortTool();
 initJsonFormatter();
 initSqlTool();
 initToolSwitcher();
+initSqlQuiz();
