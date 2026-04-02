@@ -800,7 +800,7 @@
             <div id="sql-quiz-app" class="sql-quiz-app reveal">
                 <div id="sql-quiz-reg" class="sql-quiz-panel">
                     <h3 class="sql-quiz-title">SQL MCQ challenge</h3>
-                    <p class="sql-quiz-lead">Topics include fundamentals, JOINs, aggregates, window functions, CTEs, indexes, and optimization. Enter your details to begin — we will email your score to you and to Rushikesh.</p>
+                    <p class="sql-quiz-lead">Topics include fundamentals, JOINs, aggregates, window functions, CTEs, indexes, and optimization. You have <strong>10 minutes</strong> for all 10 questions. Question text cannot be copied during the quiz. Enter your details to begin — we will email your score to you and to Rushikesh.</p>
                     <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
                         <div class="form-grid">
                             <div class="form-field">
@@ -818,8 +818,11 @@
                     </form>
                 </div>
 
-                <div id="sql-quiz-play" class="sql-quiz-panel" hidden>
-                    <div class="sql-quiz-progress"><span id="sql-quiz-progress-label">Question 1 / 10</span></div>
+                <div id="sql-quiz-play" class="sql-quiz-panel sql-quiz-play-locked" hidden>
+                    <div class="sql-quiz-progress-row">
+                        <span id="sql-quiz-progress-label" class="sql-quiz-progress-label">Question 1 / 10</span>
+                        <span id="sql-quiz-timer" class="sql-quiz-timer" role="timer" aria-live="polite" aria-atomic="true">10:00</span>
+                    </div>
                     <div id="sql-quiz-q-wrap" class="sql-quiz-q-wrap"></div>
                     <div class="sql-quiz-nav">
                         <button type="button" class="btn-tool secondary" id="sql-quiz-prev" hidden>Back</button>

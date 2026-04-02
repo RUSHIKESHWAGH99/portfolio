@@ -36,7 +36,7 @@ function escapeHtml(t) {
         .replace(/"/g, "&quot;");
 }
 
-function buildHtml({ name, email, score, total, tier, topicsLines, summaryLine }) {
+function buildHtml({ name, email, score, total, tier, topicsLines, summaryLine, timedOut }) {
     const safeName = escapeHtml(name);
     const tierLabel =
         tier === "pro"
@@ -50,6 +50,7 @@ function buildHtml({ name, email, score, total, tier, topicsLines, summaryLine }
     return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111">
 <p>Hi ${safeName},</p>
 <p><strong>Your SQL quiz score:</strong> ${score} / ${total}</p>
+${timedOut ? "<p><em>Quiz ended automatically when the timer reached zero.</em></p>" : ""}
 <p><strong>Level:</strong> ${escapeHtml(tierLabel)}</p>
 <p>${escapeHtml(summaryLine)}</p>
 ${topicsLines.length ? `<p><strong>Topics to review:</strong></p><ul>${topicsLines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` : ""}
@@ -93,6 +94,7 @@ export default async function handler(req, res) {
     const total = Number(body.totalQuestions) || 10;
     const tier = typeof body.tier === "string" ? body.tier : "beginner";
     const wrongTopicKeys = Array.isArray(body.wrongTopicKeys) ? body.wrongTopicKeys : [];
+    const timedOut = Boolean(body.timedOut);
 
     if (!name || !isValidEmail(email)) {
         return res.status(400).json({ ok: false, error: "Valid name and email required" });
@@ -121,9 +123,10 @@ export default async function handler(req, res) {
         tier,
         topicsLines,
         summaryLine,
+        timedOut,
     });
 
-    const subject = `Your SQL quiz: ${score}/${total} (${tier === "pro" ? "Pro" : tier === "intermediate" ? "Intermediate" : "Keep learning"})`;
+    const subject = `Your SQL quiz: ${score}/${total}${timedOut ? " (timed out)" : ""} (${tier === "pro" ? "Pro" : tier === "intermediate" ? "Intermediate" : "Keep learning"})`;
 
     try {
         const r = await fetch("https://api.resend.com/emails", {

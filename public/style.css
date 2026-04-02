@@ -1089,9 +1089,35 @@ body {
 }
 .sql-quiz-privacy { font-size: 0.78rem; margin-top: 8px; margin-bottom: 16px; opacity: 0.9; }
 .sql-quiz-reg-form .btn-tool { margin-top: 8px; }
-.sql-quiz-progress {
+.sql-quiz-progress-row {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 16px;
+}
+.sql-quiz-progress-label {
     font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--accent); margin-bottom: 16px;
+    color: var(--accent);
+}
+.sql-quiz-timer {
+    font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums;
+    padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.22); color: var(--text);
+}
+[data-theme="light"] .sql-quiz-timer { background: rgba(0, 0, 0, 0.06); }
+.sql-quiz-timer.is-low { color: #ffb86c; border-color: rgba(255, 184, 108, 0.45); }
+.sql-quiz-timer.is-critical {
+    color: #f78c6c; border-color: rgba(247, 140, 108, 0.5);
+    animation: sql-quiz-timer-pulse 0.9s ease-in-out infinite;
+}
+@keyframes sql-quiz-timer-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+/* Discourage copying question text (not foolproof — see site notice). */
+#sql-quiz-play.sql-quiz-play-locked,
+#sql-quiz-play.sql-quiz-play-locked * {
+    -webkit-user-select: none;
+    user-select: none;
+    -moz-user-select: none;
 }
 .sql-quiz-q-wrap { margin-bottom: 24px; }
 .sql-quiz-q-text {

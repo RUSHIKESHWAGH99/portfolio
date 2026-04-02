@@ -826,6 +826,9 @@ function initTheme() {
 }
 
 // ── SQL quiz (Fun tab) ───────────────────────────────────────
+/** Total seconds allowed for all 10 questions. */
+const SQL_QUIZ_TIME_SEC = 600;
+
 function shuffleInPlace(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -848,6 +851,7 @@ function initSqlQuiz() {
     const loadErr = document.getElementById("sql-quiz-load-err");
     const qWrap = document.getElementById("sql-quiz-q-wrap");
     const progLabel = document.getElementById("sql-quiz-progress-label");
+    const timerEl = document.getElementById("sql-quiz-timer");
     const btnPrev = document.getElementById("sql-quiz-prev");
     const btnNext = document.getElementById("sql-quiz-next");
     const btnRetry = document.getElementById("sql-quiz-retry");
@@ -868,6 +872,71 @@ function initSqlQuiz() {
     let qIndex = 0;
     let participantName = "";
     let participantEmail = "";
+    let quizCompleted = false;
+    let timerId = null;
+    let secondsLeft = 0;
+    let endedByTimer = false;
+
+    function stopQuizTimer() {
+        if (timerId !== null) {
+            window.clearInterval(timerId);
+            timerId = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        if (!timerEl) return;
+        const m = Math.floor(Math.max(0, secondsLeft) / 60);
+        const s = Math.max(0, secondsLeft) % 60;
+        timerEl.textContent = `${m}:${String(s).padStart(2, "0")}`;
+        timerEl.classList.toggle("is-low", secondsLeft <= 60 && secondsLeft > 0);
+        timerEl.classList.toggle("is-critical", secondsLeft <= 30 && secondsLeft > 0);
+    }
+
+    function startQuizTimer() {
+        stopQuizTimer();
+        endedByTimer = false;
+        secondsLeft = SQL_QUIZ_TIME_SEC;
+        updateTimerDisplay();
+        timerId = window.setInterval(() => {
+            secondsLeft -= 1;
+            updateTimerDisplay();
+            if (secondsLeft <= 0) {
+                stopQuizTimer();
+                endedByTimer = true;
+                finishQuiz();
+            }
+        }, 1000);
+    }
+
+    /**
+     * Blocks copy/cut when selection is inside the active quiz panel.
+     *
+     * @param {ClipboardEvent} e
+     */
+    function guardQuizClipboard(e) {
+        if (playPanel.hidden) return;
+        const t = e.target;
+        if (t instanceof Node && playPanel.contains(t)) {
+            e.preventDefault();
+            return;
+        }
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
+        let n = range.commonAncestorContainer;
+        if (n.nodeType !== Node.ELEMENT_NODE) n = n.parentElement;
+        if (n && playPanel.contains(n)) e.preventDefault();
+    }
+
+    document.addEventListener("copy", guardQuizClipboard, true);
+    document.addEventListener("cut", guardQuizClipboard, true);
+    playPanel.addEventListener("contextmenu", (e) => {
+        if (!playPanel.hidden) e.preventDefault();
+    });
+    playPanel.addEventListener("dragstart", (e) => {
+        if (!playPanel.hidden) e.preventDefault();
+    });
 
     async function ensurePool() {
         if (pool) return;
@@ -918,6 +987,10 @@ function initSqlQuiz() {
     }
 
     function finishQuiz() {
+        if (quizCompleted) return;
+        quizCompleted = true;
+        stopQuizTimer();
+
         let score = 0;
         const wrongTopicKeys = [];
         selected.forEach((q, i) => {
@@ -933,7 +1006,11 @@ function initSqlQuiz() {
         proCard.hidden = tier !== "pro";
         resultStandard.hidden = false;
         resultHeading.textContent = tier === "pro" ? "Summary" : "Your results";
-        scoreLine.textContent = `You scored ${score} / 10.`;
+        if (endedByTimer) {
+            scoreLine.textContent = `You scored ${score} / 10. The timer reached zero — any unanswered or unsubmitted questions count as incorrect.`;
+        } else {
+            scoreLine.textContent = `You scored ${score} / 10.`;
+        }
         if (tier === "pro" && proScoreEl) proScoreEl.textContent = `${score}/10`;
 
         if (tier === "beginner") {
@@ -974,6 +1051,7 @@ function initSqlQuiz() {
                 totalQuestions: 10,
                 tier,
                 wrongTopicKeys: uniqueWrong,
+                timedOut: endedByTimer,
             }),
         })
             .then(async (r) => {
@@ -1018,9 +1096,12 @@ function initSqlQuiz() {
         selected = copy.slice(0, 10);
         answers = selected.map(() => null);
         qIndex = 0;
+        quizCompleted = false;
+        endedByTimer = false;
         regPanel.hidden = true;
         playPanel.hidden = false;
         renderQuestion();
+        startQuizTimer();
     });
 
     btnPrev.addEventListener("click", () => {
@@ -1044,6 +1125,9 @@ function initSqlQuiz() {
     });
 
     btnRetry.addEventListener("click", () => {
+        stopQuizTimer();
+        quizCompleted = false;
+        endedByTimer = false;
         resPanel.hidden = true;
         playPanel.hidden = true;
         regPanel.hidden = false;
@@ -1051,6 +1135,11 @@ function initSqlQuiz() {
         selected = [];
         answers = [];
         pool = null;
+        if (timerEl) {
+            secondsLeft = SQL_QUIZ_TIME_SEC;
+            timerEl.classList.remove("is-low", "is-critical");
+            updateTimerDisplay();
+        }
         emailStatus.textContent = "";
         emailStatus.className = "sql-quiz-email-status";
     });
