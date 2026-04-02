@@ -1,709 +1,519 @@
 /**
- * Builds public/data/sql-quiz.json with 500 MCQs (4 options each).
- * Run from repo root: node scripts/generate-sql-quiz.mjs
+ * Builds public/data/sql-quiz.json — 1 000 MCQs.
+ *   500 theoretical  (concept explanations, "what does X mean?")
+ *   500 practical    (read a query, spot the error, predict output)
  *
- * Distractors are balanced to similar length as the correct answer so
- * "pick the longest" is not a reliable strategy.
+ * Run: node scripts/generate-sql-quiz.mjs
  */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = join(__dirname, "..", "public", "data");
-const OUT = join(OUT_DIR, "sql-quiz.json");
+const OUT_DIR   = join(__dirname, "..", "public", "data");
+const OUT       = join(OUT_DIR, "sql-quiz.json");
 mkdirSync(OUT_DIR, { recursive: true });
 
-/** Deterministic shuffle so JSON is stable across runs. */
-function shuffleDeterministic(items, seed) {
+/** Deterministic Fisher-Yates with a simple LCG so the same ID always picks same order. */
+function shuffleDet(items, seed) {
     const a = [...items];
-    let s = seed >>> 0;
+    let s   = seed >>> 0;
     for (let i = a.length - 1; i > 0; i--) {
-        s = (Math.imul(s, 1103515245) + 12345) >>> 0;
-        const j = s % (i + 1);
+        s         = (Math.imul(s, 1103515245) + 12345) >>> 0;
+        const j   = s % (i + 1);
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
 }
 
-/** Phrases appended only to wrong answers — generic, do not signal correctness. */
-const LENGTH_PADS = [
-    " in typical OLTP and warehouse engines when standard SQL rules apply",
-    " once NULL handling, collation, and three-valued logic are taken into account",
-    " as documented in the SQL standard, aside from vendor-specific extensions",
-    " for most analytical queries, though dialect quirks should always be verified",
-    " when the optimizer sees selective predicates and proper key statistics",
-];
+const questions = [];
+let qid = 0;
 
 /**
- * Lengthens a distractor so its size is closer to the correct answer's (reduces length heuristics).
+ * Add a question; options are shuffled deterministically.
  *
- * @param {string} wrong
- * @param {string} correct
- * @param {number} salt
- * @returns {string}
- */
-function stretchDistractor(wrong, correct, salt) {
-    const target = Math.max(correct.length, 48);
-    let out = wrong.trim();
-    let i = 0;
-    while (out.length < target * 0.88 && i < LENGTH_PADS.length) {
-        out += LENGTH_PADS[(salt + i) % LENGTH_PADS.length];
-        i += 1;
-    }
-    return out;
-}
-
-/**
- * Ensures all three wrong answers are roughly similar length to `correct`.
- *
+ * @param {"theoretical"|"practical"} type
+ * @param {string} topic
+ * @param {string} q
  * @param {string} correct
  * @param {string} w1
  * @param {string} w2
  * @param {string} w3
- * @param {number} seed
- * @returns {[string, string, string]}
  */
-function balanceWrongOptions(correct, w1, w2, w3, seed) {
-    const ref = correct.length;
-    const wrongs = [w1, w2, w3];
-    const maxW = Math.max(w1.length, w2.length, w3.length);
-    const minW = Math.min(w1.length, w2.length, w3.length);
-    const needsStretch = ref > maxW * 1.25 || maxW > minW * 2.2;
-    if (!needsStretch) return [w1, w2, w3];
-    return wrongs.map((w, j) => stretchDistractor(w, correct, seed + j * 17));
-}
-
-/**
- * Pads distractors until the longest wrong option is within a few chars of `correct`
- * so "always pick the longest" is not a reliable tactic.
- *
- * @param {string} correct
- * @param {string} a
- * @param {string} b
- * @param {string} c
- * @param {number} seed
- * @returns {[string, string, string]}
- */
-function competitiveWrongLengths(correct, a, b, c, seed) {
-    const lc = correct.length;
-    let x = a;
-    let y = b;
-    let z = c;
-    let guard = 0;
-    while (lc > Math.max(x.length, y.length, z.length) - 6 && guard < 14) {
-        const m = Math.min(x.length, y.length, z.length);
-        if (x.length === m) x = stretchDistractor(x, correct, seed + guard);
-        else if (y.length === m) y = stretchDistractor(y, correct, seed + guard + 3);
-        else z = stretchDistractor(z, correct, seed + guard + 6);
-        guard += 1;
-    }
-    // Sometimes correct is still uniquely longest — add one more pad to the shortest wrong
-    if (lc > Math.max(x.length, y.length, z.length)) {
-        if (x.length <= y.length && x.length <= z.length) x = stretchDistractor(x, correct, seed + 100);
-        else if (y.length <= z.length) y = stretchDistractor(y, correct, seed + 101);
-        else z = stretchDistractor(z, correct, seed + 102);
-    }
-    return [x, y, z];
-}
-
-const questions = [];
-let id = 0;
-
-function add(topic, q, correct, w1, w2, w3) {
-    const s = (id + 1) * 131;
-    let [a, b, c] = balanceWrongOptions(correct, w1, w2, w3, s);
-    [a, b, c] = competitiveWrongLengths(correct, a, b, c, s + 19);
-    const opts = shuffleDeterministic([correct, a, b, c], (id + 1) * 7919);
+function add(type, topic, q, correct, w1, w2, w3) {
+    const opts   = shuffleDet([correct, w1, w2, w3], (qid + 1) * 7919);
     const answer = opts.indexOf(correct);
-    if (answer < 0) throw new Error("correct not in options");
-    questions.push({ id: ++id, topic, q, options: opts, answer });
+    if (answer < 0) throw new Error(`correct not found for id ${qid + 1}`);
+    questions.push({ id: ++qid, type, topic, q, options: opts, answer });
 }
-
-/* ── Looped generators — distractors are plausible and parallel in style ─── */
-
-const joinTypes = [
-    [
-        "INNER JOIN",
-        "Only rows that satisfy the join predicate on both sides appear in the result set",
-        "Every row from the left is kept and non-matching right-side columns are filled with NULL",
-        "Every row from the right is kept and non-matching left-side columns are filled with NULL",
-        "All combinations of left and right rows appear without evaluating a join condition",
-    ],
-    [
-        "LEFT JOIN",
-        "All left-hand rows are returned; matching right rows attach, else right columns are NULL",
-        "Only pairs of rows that match the join condition on both sides are returned",
-        "All right-hand rows are returned; left columns become NULL when no match exists",
-        "The result is the Cartesian product of the two inputs with duplicate keys removed",
-    ],
-    [
-        "RIGHT JOIN",
-        "All right-hand rows are returned; matching left rows attach, else left columns are NULL",
-        "Only pairs of rows that satisfy the predicate on both sides are returned",
-        "All left-hand rows are returned; right columns become NULL when no match exists",
-        "Rows are paired strictly by primary-key equality with no NULL padding allowed",
-    ],
-    [
-        "FULL OUTER JOIN",
-        "Rows from either side appear; unmatched columns from the other side are padded with NULL",
-        "Only rows that match on both sides are kept, identical to an inner join",
-        "Only non-NULL keys from both tables participate; the rest are discarded first",
-        "Every left row is paired with every right row before duplicate removal",
-    ],
-    [
-        "CROSS JOIN",
-        "Each left row is paired with every right row, producing the Cartesian product",
-        "Only rows satisfying an ON or USING clause are combined from both inputs",
-        "Duplicate keys are collapsed automatically before any pairing occurs",
-        "The join requires a matching foreign-key definition between the two tables",
-    ],
-];
-
-joinTypes.forEach(([name, c, w1, w2, w3]) => {
-    add("joins", `In standard SQL, what does ${name} typically produce?`, c, w1, w2, w3);
-});
-
-const aggFacts = [
-    [
-        "COUNT(*)",
-        "Counts every row in the group, including those where individual columns are NULL",
-        "Counts only non-NULL values in the argument column, ignoring NULL rows entirely",
-        "Returns the number of distinct physical pages touched during the scan",
-        "Requires an ORDER BY clause in the same SELECT list to produce a defined count",
-    ],
-    [
-        "COUNT(column)",
-        "Counts non-NULL values in that column for each group",
-        "Counts all rows including those where that column is NULL, same as COUNT(*)",
-        "Returns the maximum numeric magnitude found in that column per group",
-        "Can only be applied to columns that participate in the PRIMARY KEY",
-    ],
-    [
-        "SUM(column)",
-        "Sums non-NULL numeric values in that column within each group",
-        "Concatenates string representations of the column across the group in SQL standard",
-        "Always rounds fractional results to the nearest integer before returning",
-        "Ignores the GROUP BY clause and aggregates the entire table in one value",
-    ],
-    [
-        "AVG(column)",
-        "Computes the mean of non-NULL values in that column for each group",
-        "Treats NULL as zero for every skipped cell when forming the average",
-        "Returns the middle element after sorting the group (the statistical median)",
-        "Is defined only for INTEGER columns and raises an error for DECIMAL types",
-    ],
-    [
-        "MAX(column)",
-        "Returns the greatest value in the group according to the data type ordering rules",
-        "Always returns the first physical row encountered in storage order",
-        "Returns the smallest value when the column is indexed in descending order",
-        "Is restricted to DATE and TIMESTAMP columns in the SQL standard",
-    ],
-    [
-        "MIN(column)",
-        "Returns the smallest value in the group according to the data type ordering rules",
-        "Returns the largest value whenever ORDER BY DESC appears elsewhere in the query",
-        "Skips character columns and only considers numeric fields in the group",
-        "Cannot appear in the same SELECT list as MAX on another column",
-    ],
-];
-
-aggFacts.forEach(([fn, c, w1, w2, w3]) => {
-    add("aggregates", `What does ${fn} compute in a grouped query?`, c, w1, w2, w3);
-});
-
-const windowFns = [
-    [
-        "ROW_NUMBER()",
-        "Assigns a unique integer to each row in the partition in deterministic order",
-        "Assigns the same integer to every row that ties on the ORDER BY keys",
-        "Numbers rows starting at zero and resets at every physical page boundary",
-        "Replaces PARTITION BY and must be used without an OVER clause",
-    ],
-    [
-        "RANK()",
-        "Assigns ranks with gaps after tied groups share the same rank value",
-        "Assigns dense consecutive integers with no gaps after ties in the partition",
-        "Requires exactly two PARTITION BY columns to behave deterministically",
-        "Is identical to ROW_NUMBER for every input regardless of ties",
-    ],
-    [
-        "DENSE_RANK()",
-        "Assigns consecutive rank values without leaving gaps after tied groups",
-        "Always inserts a gap equal to the tie count after each tied block",
-        "Orders the partition implicitly by primary key when ORDER BY is omitted",
-        "Counts only NULL values when ranking non-NULL business metrics",
-    ],
-    [
-        "LAG(expr)",
-        "Returns the value of expr from a prior row in the window ordering",
-        "Returns the value from the next row ahead in the window ordering",
-        "Accumulates a running sum of expr over all prior rows in the partition",
-        "Is only valid inside a GROUP BY aggregate list, not inside OVER",
-    ],
-    [
-        "LEAD(expr)",
-        "Returns the value of expr from a following row in the window ordering",
-        "Returns the value from the previous row behind in the window ordering",
-        "Computes the difference between MAX and MIN of expr in the frame",
-        "Cannot be combined with ORDER BY inside the same OVER specification",
-    ],
-    [
-        "NTILE(n)",
-        "Divides each partition into up to n buckets with nearly equal row counts",
-        "Returns a fractional percentile between zero and one for expr",
-        "Counts NULL buckets separately and excludes them from the bucket total",
-        "Is equivalent to FLOOR(row_number / n) with no ordering requirement",
-    ],
-];
-
-windowFns.forEach(([fn, c, w1, w2, w3]) => {
-    add("window", `In SQL window functions, what is ${fn} used for?`, c, w1, w2, w3);
-});
-
-const basicsPool = [
-    [
-        "Primary key",
-        "Uniquely identifies each row and enforces non-NULL for those columns in the table",
-        "Automatically speeds up every query in the database without additional indexes",
-        "Must always be stored as a variable-length character string type",
-        "Allows unlimited duplicate NULL markers across rows in standard SQL",
-    ],
-    [
-        "Foreign key",
-        "Enforces that values reference existing keys in the parent table (or NULL where allowed)",
-        "Creates a clustered index on the child table without an explicit CREATE INDEX",
-        "Is interchangeable with PRIMARY KEY constraints on the same column list",
-        "Forbids NULL in the referencing columns in every SQL implementation",
-    ],
-    [
-        "SELECT",
-        "Projects columns and expressions from tables or subqueries into a result relation",
-        "Removes rows from base tables according to the WHERE predicate",
-        "Creates a new persistent table structure in the current schema",
-        "Commits the current transaction and releases all row locks held",
-    ],
-    [
-        "WHERE",
-        "Filters individual rows before grouping based on predicates on row values",
-        "Filters grouped aggregates after GROUP BY similar to a post-aggregate gate",
-        "Defines the sort order for the final result set before LIMIT is evaluated",
-        "Specifies only how two tables are related in a join and nothing else",
-    ],
-    [
-        "HAVING",
-        "Restricts grouped result rows after aggregates have been computed",
-        "Restricts base-table rows before any GROUP BY bucketing takes place",
-        "Replaces the SELECT list when only aggregates are needed in output",
-        "Creates or rebuilds indexes referenced in the GROUP BY column list",
-    ],
-    [
-        "GROUP BY",
-        "Forms buckets so aggregate functions are evaluated once per distinct bucket",
-        "Sorts the entire result globally without changing aggregate semantics",
-        "Removes duplicate rows from the final output in place of DISTINCT",
-        "Defines how two relations are combined using equality predicates only",
-    ],
-    [
-        "ORDER BY",
-        "Determines the sequence of rows in the cursor or final result set",
-        "Removes NULL values from the result before returning rows to the client",
-        "Defines window partitions independently of the frame clause",
-        "Is logically evaluated before WHERE filters in the processing pipeline",
-    ],
-    [
-        "DISTINCT",
-        "Eliminates duplicate result rows after SELECT expressions are evaluated",
-        "Sorts ascending on the first column and descending on all remaining columns",
-        "Creates a unique index on the underlying base table automatically",
-        "Applies only when exactly one column appears in the SELECT list",
-    ],
-    [
-        "LIMIT / OFFSET",
-        "Caps row count and optionally skips a leading prefix of the ordered result",
-        "Defines the sliding frame for window functions inside OVER clauses",
-        "Substitutes for HAVING when working with grouped aggregate queries",
-        "Is supported only on Oracle Database and not in portable SQL text",
-    ],
-    [
-        "PRIMARY KEY vs UNIQUE",
-        "Primary key columns are NOT NULL and uniquely identify rows; UNIQUE allows NULLs per rules",
-        "The two constraints are identical for every column list in the standard",
-        "UNIQUE always implies PRIMARY KEY when declared on a single column",
-        "PRIMARY KEY permits multiple NULLs in the key columns across different rows",
-    ],
-];
-
-basicsPool.forEach(([term, c, w1, w2, w3]) => {
-    add("basics", `In relational SQL, which statement best describes ${term}?`, c, w1, w2, w3);
-});
-
-const nullFacts = [
-    [
-        "NULL = NULL",
-        "Evaluates to UNKNOWN in SQL three-valued logic; use IS NULL / IS NOT NULL instead",
-        "Evaluates to TRUE whenever both operands are NULL in the WHERE clause",
-        "Evaluates to FALSE and therefore excludes the row from every predicate",
-        "Is required to be TRUE so that outer joins can pad unmatched rows",
-    ],
-    [
-        "NULL in arithmetic",
-        "Typically propagates NULL through expressions unless functions like COALESCE wrap it",
-        "Is coerced to zero for addition and to one for multiplication in the standard",
-        "Is coerced to one for addition and to zero for division consistently",
-        "Raises a runtime exception in every major database for basic arithmetic",
-    ],
-    [
-        "COALESCE(a,b)",
-        "Returns the first argument that is not NULL from left to right",
-        "Returns the arithmetic mean of all non-NULL arguments provided",
-        "Always returns the rightmost argument regardless of NULL status",
-        "Concatenates all arguments into a single VARCHAR result value",
-    ],
-    [
-        "NULLIF(a,b)",
-        "Returns NULL when a and b compare equal; otherwise returns a",
-        "Always returns b when either argument is NULL in the expression",
-        "Behaves identically to COALESCE with the arguments reversed",
-        "Casts both arguments to BOOLEAN before comparison in all dialects",
-    ],
-];
-
-nullFacts.forEach(([label, c, w1, w2, w3]) => {
-    add("nulls", `In SQL, what is correct about ${label}?`, c, w1, w2, w3);
-});
-
-const setOps = [
-    [
-        "UNION",
-        "Stacks query results and removes duplicate rows unless UNION ALL is specified",
-        "Stacks query results and retains all duplicate rows by default in the standard",
-        "Requires result column names to match exactly or the operation fails",
-        "Sorts the combined result globally before duplicates are considered",
-    ],
-    [
-        "UNION ALL",
-        "Concatenates result sets preserving all rows including duplicates",
-        "Removes duplicates exactly like UNION without an ALL keyword",
-        "Allows only two columns total in each participating SELECT list",
-        "Is always slower than an INNER JOIN between the same two row sets",
-    ],
-    [
-        "INTERSECT",
-        "Returns rows that appear in both SELECT results where the dialect implements it",
-        "Returns every row from the first SELECT regardless of the second query",
-        "Subtracts the second result from the first, similar to EXCEPT semantics",
-        "Is an alias for FULL OUTER JOIN when column counts already match",
-    ],
-    [
-        "EXCEPT / MINUS",
-        "Returns rows from the first query not present in the second (per dialect rules)",
-        "Returns the union of both queries with duplicates removed automatically",
-        "Returns only rows that appear in both queries on the same key columns",
-        "Returns the Cartesian product restricted by the WHERE predicate only",
-    ],
-];
-
-setOps.forEach(([op, c, w1, w2, w3]) => {
-    add("set_ops", `What does ${op} do between two compatible SELECT statements?`, c, w1, w2, w3);
-});
-
-const idxFacts = [
-    [
-        "B-tree index",
-        "Supports point lookups and range scans efficiently on ordered key values",
-        "Forces the optimizer to read every table page end-to-end sequentially",
-        "Stores exclusively NULL markers and cannot reference non-NULL keys",
-        "Cannot be declared UNIQUE under any circumstances in SQL engines",
-    ],
-    [
-        "Covering index",
-        "Contains all columns needed so the engine can answer the query from the index alone",
-        "Always increases write amplification without benefiting read latency",
-        "Prevents any WHERE clause predicates from referencing indexed columns",
-        "Applies only to VARCHAR columns longer than 256 characters",
-    ],
-    [
-        "Composite index (a,b)",
-        "Can be used for seeks on a alone or on (a,b) following leftmost-prefix rules",
-        "Can be used for seeks on b alone with the same efficiency as on a alone",
-        "Makes only the second column b searchable for equality predicates",
-        "Behaves exactly like two completely independent single-column indexes always",
-    ],
-];
-
-idxFacts.forEach(([term, c, w1, w2, w3]) => {
-    add("indexes", `Which description fits a ${term}?`, c, w1, w2, w3);
-});
-
-const optFacts = [
-    [
-        "SELECT *",
-        "Often widens I/O and couples queries to schema changes; listing columns is usually safer",
-        "Is always the fastest way to retrieve rows because the star avoids planning cost",
-        "Is required for the optimizer to choose any index-backed access path",
-        "Guarantees a higher buffer-pool hit rate than projecting explicit columns",
-    ],
-    [
-        "N+1 query pattern",
-        "Issues many round-trips; often replaced with JOINs or batched IN lists",
-        "Is the recommended pattern for large OLAP scans on fact tables",
-        "Is how columnar warehouses expect you to load dimension attributes",
-        "Is automatically removed from the plan when DISTINCT is present",
-    ],
-    [
-        "Predicate sargability",
-        "Means predicates are written so indexes can be used without wrapping indexed columns",
-        "Encourages applying functions to indexed columns inside WHERE freely",
-        "Discourages using WHERE altogether in favor of HAVING on raw rows",
-        "Applies only to document databases and not to relational SQL engines",
-    ],
-    [
-        "EXPLAIN",
-        "Shows how the planner intends to execute or executed a statement",
-        "Commits the surrounding transaction and persists pending changes",
-        "Rebuilds only table statistics in MySQL and has no meaning elsewhere",
-        "Drops secondary indexes that are not used in the current session",
-    ],
-];
-
-optFacts.forEach(([term, c, w1, w2, w3]) => {
-    add("optimization", `What is a good characterization of ${term}?`, c, w1, w2, w3);
-});
-
-const cteFacts = [
-    [
-        "WITH clause (CTE)",
-        "Introduces named subqueries that can be referenced later in the same statement",
-        "Materializes a permanent base table visible to all future sessions",
-        "Cannot reference another CTE defined earlier in the same WITH list",
-        "Is evaluated strictly after ORDER BY in the outer query finishes sorting",
-    ],
-    [
-        "Recursive CTE",
-        "Iterates from an anchor part to a fixed point for hierarchies and graphs",
-        "Cannot combine anchor and recursive parts using UNION ALL syntax",
-        "Always runs forever until the DBA cancels the session manually",
-        "Is exactly equivalent to a global temporary table with no recursion",
-    ],
-];
-
-cteFacts.forEach(([term, c, w1, w2, w3]) => {
-    add("cte", `What is true about a ${term} in SQL?`, c, w1, w2, w3);
-});
-
-const subqFacts = [
-    [
-        "Correlated subquery",
-        "References outer-query columns and is re-evaluated in the outer row context",
-        "Never references columns from an outer query block by SQL definition",
-        "Is always more efficient than an equivalent JOIN for large fact tables",
-        "Cannot legally appear inside a WHERE clause in standard SQL grammar",
-    ],
-    [
-        "EXISTS predicate",
-        "Is true when the subquery returns at least one row and stops early when possible",
-        "Counts how many rows the subquery would return if fully materialized",
-        "Is always equivalent to IN with a NULL-safe comparison on all columns",
-        "Requires the subquery SELECT list to contain an aggregate function",
-    ],
-    [
-        "IN (subquery)",
-        "Holds when the left value equals any row returned by the subquery",
-        "Always correlates to the outer query on every column in the SELECT list",
-        "Handles NULL comparisons safely without UNKNOWN outcomes in all cases",
-        "Is defined to mean the same as an INNER JOIN for every possible query shape",
-    ],
-];
-
-subqFacts.forEach(([term, c, w1, w2, w3]) => {
-    add("subqueries", `Which statement about ${term} is most accurate?`, c, w1, w2, w3);
-});
-
-const dmlFacts = [
-    [
-        "INSERT",
-        "Adds new rows into an existing table or partition according to provided values",
-        "Removes rows that match a predicate from the target table permanently",
-        "Alters column data types and constraints on the table in one statement",
-        "Renames columns in place without rewriting any existing stored rows",
-    ],
-    [
-        "UPDATE",
-        "Changes column values for rows that satisfy the optional WHERE condition",
-        "Adds new nullable columns to the table definition for every matched row",
-        "Drops the entire database if the WHERE clause matches zero rows",
-        "Requires a JOIN to every referenced table even for single-table updates",
-    ],
-    [
-        "DELETE",
-        "Removes rows that match the predicate while leaving table structure intact",
-        "Always acquires identical locks and logs identical volume as TRUNCATE",
-        "Cannot include a WHERE clause when referential integrity is enabled",
-        "Sets default values on columns instead of removing matching rows",
-    ],
-    [
-        "TRUNCATE",
-        "Quickly removes all rows from a table with dialect-specific logging and lock rules",
-        "Logs each removed row individually exactly like DELETE for all engines",
-        "Removes at most one row unless a TOP or LIMIT modifier is supplied",
-        "Drops the table object and all dependent views in the same command",
-    ],
-];
-
-dmlFacts.forEach(([kw, c, w1, w2, w3]) => {
-    add("dml_ddl", `What does ${kw} do in SQL?`, c, w1, w2, w3);
-});
-
-/* ── Numeric expansion to reach 500 ───────────────────────── */
 
 const topicLabels = {
-    basics: "SQL fundamentals & clauses",
-    joins: "JOINs & relational combinations",
-    aggregates: "GROUP BY, aggregates & HAVING",
-    subqueries: "Subqueries & EXISTS / IN",
-    window: "Window functions & OVER",
-    cte: "CTEs & WITH",
+    basics:       "SQL fundamentals & clauses",
+    joins:        "JOINs & relational combinations",
+    aggregates:   "GROUP BY, aggregates & HAVING",
+    subqueries:   "Subqueries & EXISTS / IN",
+    window:       "Window functions & OVER",
+    cte:          "CTEs & WITH",
     optimization: "Query tuning & patterns",
-    indexes: "Indexes & access paths",
-    nulls: "NULL handling & functions",
-    dml_ddl: "DML / DDL basics",
-    set_ops: "UNION / INTERSECT / EXCEPT",
+    indexes:      "Indexes & access paths",
+    nulls:        "NULL handling & functions",
+    dml_ddl:      "DML / DDL basics",
+    set_ops:      "UNION / INTERSECT / EXCEPT",
 };
 
-const stemBank = [
-    {
-        t: "basics",
-        stem: (n) => `Concept drill #${n}: Which best describes a relational "relation" in SQL theory?`,
-        c: "An unordered set of tuples (rows) sharing a fixed set of named attributes (columns)",
-        w: [
-            "A single physical heap file on disk with no notion of column names or types",
-            "A list that is always sorted by the primary key values for convenient retrieval",
-            "Exactly one scalar column that holds nested documents instead of tuples",
-        ],
-    },
-    {
-        t: "joins",
-        stem: (n) => `Join drill #${n}: When is a NATURAL JOIN risky?`,
-        c: "It equates all same-named columns implicitly, which may not be the intended join keys",
-        w: [
-            "It refuses to match on column names and instead hashes entire row images only",
-            "It requires a USING list for every join and fails if any column shares a name",
-            "It forbids referencing more than one table in the same FROM clause entirely",
-        ],
-    },
-    {
-        t: "aggregates",
-        stem: (n) => `Aggregate drill #${n}: Why can SELECT non-aggregated columns be invalid with GROUP BY?`,
-        c: "They must be grouped or functionally dependent on the grouped keys per SQL rules",
-        w: [
-            "GROUP BY forbids returning any base columns alongside aggregate expressions",
-            "Only COUNT(*) may appear in the SELECT list when GROUP BY is present",
-            "HAVING replaces the entire SELECT list and hides non-aggregated columns",
-        ],
-    },
-    {
-        t: "window",
-        stem: (n) => `Window drill #${n}: What does PARTITION BY in OVER() do?`,
-        c: "Splits the row stream so the window function restarts separately in each partition",
-        w: [
-            "Sorts every table in the database globally before any WHERE is evaluated",
-            "Eliminates the need for GROUP BY by collapsing all rows into one partition",
-            "Creates a durable partitioned table object stored on disk for reuse",
-        ],
-    },
-    {
-        t: "subqueries",
-        stem: (n) => `Subquery drill #${n}: Scalar subquery in SELECT must return?`,
-        c: "At most one row and one column of values for each outer row being processed",
-        w: [
-            "Any number of rows as long as the subquery text fits in a single line",
-            "Exactly two columns that the outer query can unpack into local variables",
-            "Only aggregate functions without a GROUP BY inside the subquery body",
-        ],
-    },
-    {
-        t: "cte",
-        stem: (n) => `CTE drill #${n}: Can multiple CTEs chain in one WITH?`,
-        c: "Yes — later CTEs may reference earlier names in the same WITH clause list",
-        w: [
-            "No — the standard allows only a single CTE name per SQL statement",
-            "Only on very old MySQL releases before common table expressions existed",
-            "Only when the CTE is declared recursive with an ANCHOR keyword present",
-        ],
-    },
-    {
-        t: "optimization",
-        stem: (n) => `Tuning drill #${n}: Why might OR across different indexed columns hurt performance?`,
-        c: "The planner may fail to union index-driven paths; rewriting with UNION ALL can help",
-        w: [
-            "OR predicates are always merged into a single perfect index intersection plan",
-            "OR is ignored by optimizers so indexes are still used exactly like AND",
-            "OR forces a global sort of the entire table before any filter is applied",
-        ],
-    },
-    {
-        t: "indexes",
-        stem: (n) => `Index drill #${n}: Partial / filtered indexes are useful when?`,
-        c: "A predicate isolates a hot fraction of rows so the index stays small and cache-friendly",
-        w: [
-            "They are never useful and should be avoided in production schema design",
-            "They apply only to full table scans and not to selective predicates",
-            "They are legal only on PRIMARY KEY columns and not on secondary keys",
-        ],
-    },
-    {
-        t: "nulls",
-        stem: (n) => `NULL drill #${n}: Result of TRUE AND NULL in three-valued logic?`,
-        c: "UNKNOWN — the row does not pass a WHERE clause that needs pure TRUE",
-        w: [
-            "TRUE, so the row always satisfies conjunctions involving NULL comparisons",
-            "FALSE, which removes the row from the result before aggregates are computed",
-            "NULL is forbidden from appearing in boolean expressions in standard SQL",
-        ],
-    },
-    {
-        t: "dml_ddl",
-        stem: (n) => `DDL drill #${n}: What does CREATE VIEW typically store?`,
-        c: "The text of a query definition; stored rows remain in the underlying base tables",
-        w: [
-            "Physical copies of all result rows refreshed only when the session ends",
-            "Index entries alone with no reference back to the defining SELECT text",
-            "Only the transaction log identifiers for the last bulk load operation",
-        ],
-    },
-    {
-        t: "set_ops",
-        stem: (n) => `Set drill #${n}: For UNION, column lists must?`,
-        c: "Be compatible in arity and types; corresponding names do not have to match",
-        w: [
-            "Use identical column aliases in the same order or the statement is rejected",
-            "Contain exactly one projected expression per SELECT in the operation",
-            "Match primary-key definitions between the two sides before UNION is legal",
-        ],
-    },
+/* Varied table & column names so each rotation of a pattern looks different. */
+const T = [
+    "orders","users","events","skus","sessions","payments","subs","tickets",
+    "shipments","refunds","clicks","carts","accounts","campaigns","leads",
+    "visitors","devices","regions","products","teams","invoices","coupons",
+    "widgets","metrics","flags",
+];
+const C = [
+    "user_id","order_id","amount","status","created_at","region","sku",
+    "score","flag","tier","qty","price","kind","code","name",
 ];
 
-while (questions.length < 500) {
-    const bank = stemBank[(questions.length - 1) % stemBank.length];
-    const n = questions.length + 1;
-    add(bank.t, bank.stem(n), bank.c, bank.w[0], bank.w[1], bank.w[2]);
+// ─────────────────────────────────────────────────────────────────────────────
+// THEORETICAL  (500 questions — 25 patterns × 20 rotations)
+// ─────────────────────────────────────────────────────────────────────────────
+for (let k = 0; k < 500; k++) {
+    const t  = T[k % T.length];
+    const t2 = T[(k + 9)  % T.length];
+    const c  = C[k % C.length];
+    const c2 = C[(k + 4)  % C.length];
+    const p  = k % 25;
+
+    switch (p) {
+        case 0:
+            add("theoretical","nulls",
+                `What is wrong with this NULL predicate?\nSELECT * FROM ${t} WHERE ${c} = NULL;`,
+                "Use IS NULL — `= NULL` evaluates to UNKNOWN, not TRUE",
+                `Nothing; it returns rows where ${c} is NULL`,
+                "NULL cannot appear after an equality operator",
+                "The engine treats NULL as 0 for comparisons");
+            break;
+        case 1:
+            add("theoretical","aggregates",
+                `Why is this invalid in standard SQL?\nSELECT ${c}, ${c2}, COUNT(*) FROM ${t} GROUP BY ${c};`,
+                `${c2} is not in GROUP BY and not functionally dependent on ${c}`,
+                "COUNT(*) is not allowed alongside GROUP BY",
+                "Two non-aggregate columns cannot precede COUNT",
+                "GROUP BY must list every column in the table");
+            break;
+        case 2:
+            add("theoretical","aggregates",
+                `To filter groups where AVG(${c}) > 10, where should that condition go?\nSELECT ${c2}, AVG(${c}) FROM ${t} GROUP BY ${c2}`,
+                `HAVING AVG(${c}) > 10 — after GROUP BY`,
+                `WHERE AVG(${c}) > 10 — before GROUP BY`,
+                "It cannot be expressed without a subquery",
+                "LIMIT with a sort by AVG replaces the filter");
+            break;
+        case 3:
+            add("theoretical","joins",
+                `What does this LEFT JOIN guarantee?\nSELECT * FROM ${t} a LEFT JOIN ${t2} b ON a.${c} = b.${c};`,
+                `Every row from ${t} appears; unmatched ${t2} columns are NULL`,
+                "Only rows matching on both sides are returned",
+                `Unmatched ${t2} rows are kept; matched ${t} rows are dropped`,
+                "A Cartesian product is produced");
+            break;
+        case 4:
+            add("theoretical","joins",
+                `What does CROSS JOIN produce?\nSELECT * FROM ${t} CROSS JOIN ${t2};`,
+                `Every row of ${t} paired with every row of ${t2} — Cartesian product`,
+                "Only rows with equal primary keys",
+                "An error unless an ON clause is provided",
+                "Duplicate-free union of both tables");
+            break;
+        case 5:
+            add("theoretical","basics",
+                `In what logical order are the clauses processed?\nSELECT ${c} FROM ${t} WHERE ${c2} > 0 GROUP BY ${c} HAVING COUNT(*) > 1 ORDER BY ${c};`,
+                "FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY",
+                "SELECT → FROM → WHERE → GROUP BY",
+                "WHERE → FROM → GROUP BY → HAVING",
+                "ORDER BY is applied before GROUP BY");
+            break;
+        case 6:
+            add("theoretical","set_ops",
+                `How does UNION ALL differ from UNION?\n(SELECT ${c} FROM ${t}) UNION ALL (SELECT ${c} FROM ${t2});`,
+                "UNION ALL keeps duplicate rows; UNION removes them",
+                "UNION ALL removes duplicates; UNION keeps them",
+                "UNION ALL requires identical column names",
+                `UNION ALL sorts by ${c}; UNION does not`);
+            break;
+        case 7:
+            add("theoretical","window",
+                `What happens when ROW_NUMBER() has no ORDER BY inside OVER?\nSELECT ${c}, ROW_NUMBER() OVER (PARTITION BY ${c2}) rn FROM ${t};`,
+                "Runs, but row order within each partition is non-deterministic",
+                "Syntax error — ORDER BY is mandatory inside OVER",
+                "Always numbers rows by physical storage order",
+                "Behaves like RANK() with gaps");
+            break;
+        case 8:
+            add("theoretical","window",
+                `What does LAG(${c}, 1) return for each row?\nSELECT ${c2}, LAG(${c}, 1) OVER (ORDER BY ${c2}) prev FROM ${t};`,
+                `The value of ${c} from the previous row in ORDER BY sequence`,
+                "The value from the next row ahead",
+                `A running sum of all prior ${c} values`,
+                `The first ${c} in the partition for every row`);
+            break;
+        case 9:
+            add("theoretical","subqueries",
+                `When does EXISTS return TRUE?\nSELECT * FROM ${t} o WHERE EXISTS (SELECT 1 FROM ${t2} i WHERE i.${c} = o.${c});`,
+                "When the subquery returns at least one row for that outer row",
+                "When the subquery returns exactly one column",
+                "When COUNT(*) inside the subquery exceeds zero",
+                "When IN would return FALSE");
+            break;
+        case 10:
+            add("theoretical","aggregates",
+                `What is the difference between COUNT(${c}) and COUNT(*)?\nSELECT COUNT(${c}), COUNT(*) FROM ${t};`,
+                `COUNT(${c}) skips NULLs; COUNT(*) counts every row`,
+                "They are always identical",
+                `COUNT(*) skips NULLs; COUNT(${c}) counts every row`,
+                `COUNT(${c}) counts only distinct non-NULL values`);
+            break;
+        case 11:
+            add("theoretical","nulls",
+                "In SQL three-valued logic, what does NULL OR TRUE evaluate to?",
+                "TRUE",
+                "NULL",
+                "FALSE",
+                "UNKNOWN (a value distinct from NULL in the SQL standard)");
+            break;
+        case 12:
+            add("theoretical","cte",
+                `Can a later CTE reference an earlier one in the same WITH?\nWITH a AS (SELECT ${c} FROM ${t}),\n     b AS (SELECT * FROM a WHERE ${c} > 0)\nSELECT * FROM b;`,
+                "Yes — b may reference a defined earlier in the same WITH",
+                "No — CTEs cannot reference each other",
+                "Only if both are declared RECURSIVE",
+                `No — only base table ${t} may be referenced`);
+            break;
+        case 13:
+            add("theoretical","optimization",
+                `Why may wrapping a column in a function hurt performance?\nSELECT * FROM ${t} WHERE UPPER(${c}) = 'X';`,
+                `Applying UPPER() to ${c} prevents a plain index seek on ${c}`,
+                "UPPER() always improves index efficiency",
+                "It forces the optimizer to use a sort-merge join",
+                "Functions are required for case-insensitive searches");
+            break;
+        case 14:
+            add("theoretical","dml_ddl",
+                `What is the key difference between these two?\nTRUNCATE TABLE ${t};\nDELETE FROM ${t};`,
+                "TRUNCATE removes all rows with minimal logging; DELETE is row-by-row and accepts a WHERE",
+                "They are identical in all databases",
+                "DELETE cannot use a WHERE clause",
+                "TRUNCATE removes one row at a time");
+            break;
+        case 15:
+            add("theoretical","joins",
+                `What is the main risk with old-style implicit joins?\nSELECT * FROM ${t} a, ${t2} b WHERE a.${c} = b.${c};`,
+                "Forgetting the WHERE condition produces a silent Cartesian product",
+                "Old-style joins are always faster than explicit JOIN",
+                "This syntax is illegal in SQL:1999+",
+                "Cannot represent outer joins");
+            break;
+        case 16:
+            add("theoretical","aggregates",
+                "Is HAVING valid without GROUP BY?",
+                "Often yes — the whole table is treated as one implicit group",
+                "Always a syntax error in standard SQL",
+                "Only valid when two or more tables appear in FROM",
+                "HAVING without GROUP BY is the same as WHERE");
+            break;
+        case 17:
+            add("theoretical","window",
+                "How do RANK() and DENSE_RANK() differ after a tie?",
+                "RANK leaves gaps after tied groups; DENSE_RANK uses consecutive integers",
+                "They behave identically for all inputs",
+                "DENSE_RANK leaves gaps; RANK does not",
+                "Only RANK supports PARTITION BY");
+            break;
+        case 18:
+            add("theoretical","subqueries",
+                `When does a scalar subquery cause a runtime error?\nSELECT (SELECT ${c} FROM ${t}) AS x;`,
+                "When the subquery returns more than one row",
+                "When the subquery returns zero rows",
+                "When the subquery contains GROUP BY",
+                "When the outer query has no FROM clause");
+            break;
+        case 19:
+            add("theoretical","indexes",
+                `Composite index on (${c}, ${c2}) — which filter uses the index for a seek?`,
+                `WHERE ${c} = ? — satisfies the leftmost-prefix rule`,
+                `WHERE ${c2} = ? alone — skips the leading column`,
+                `WHERE ${c2} LIKE '%x%' alone`,
+                `ORDER BY ${c2} without any filter on ${c}`);
+            break;
+        case 20:
+            add("theoretical","basics",
+                `What does DISTINCT apply to here?\nSELECT DISTINCT ${c}, ${c2} FROM ${t};`,
+                `The combined row (${c}, ${c2}) — the pair must be unique`,
+                `Only the first column ${c}`,
+                "Each column independently in two passes",
+                "Primary-key rows only");
+            break;
+        case 21:
+            add("theoretical","aggregates",
+                `What does MAX return when no rows match?\nSELECT MAX(${c}) FROM ${t} WHERE ${c2} IS NULL; -- assume 0 rows match`,
+                "NULL — aggregating an empty set returns NULL",
+                "Zero rows are returned",
+                "An error — MAX on empty set is undefined",
+                "0 (zero)");
+            break;
+        case 22:
+            add("theoretical","joins",
+                "Why might an INNER JOIN return zero rows?",
+                "No rows satisfy the ON predicate (including when NULLs prevent matches)",
+                "INNER JOIN always returns at least one row",
+                "NULL in ON always evaluates to TRUE",
+                "INNER JOIN ignores the WHERE clause");
+            break;
+        case 23:
+            add("theoretical","set_ops",
+                `What does EXCEPT return?\n(SELECT ${c} FROM ${t}) EXCEPT (SELECT ${c} FROM ${t2});`,
+                `Rows in ${t} not present in ${t2}`,
+                `Rows present in both ${t} and ${t2}`,
+                "All rows from both queries combined",
+                `Rows in ${t2} not present in ${t}`);
+            break;
+        case 24:
+            add("theoretical","window",
+                `What does NTILE(4) do?\nSELECT ${c}, NTILE(4) OVER (ORDER BY ${c2}) q FROM ${t};`,
+                "Splits ordered rows into 4 nearly equal-sized buckets (larger ones come first)",
+                "Returns fractional percentiles 0.25 … 1.0",
+                "Keeps only the top 4 rows",
+                `Requires PARTITION BY ${c} or it errors`);
+            break;
+        default:
+            throw new Error(`unknown theoretical pattern ${p}`);
+    }
 }
 
-const finalList = questions.slice(0, 500);
+// ─────────────────────────────────────────────────────────────────────────────
+// PRACTICAL  (500 questions — 25 patterns × 20 rotations)
+// ─────────────────────────────────────────────────────────────────────────────
+for (let k = 0; k < 500; k++) {
+    const t  = T[k % T.length];
+    const t2 = T[(k + 9)  % T.length];
+    const c  = C[k % C.length];
+    const c2 = C[(k + 4)  % C.length];
+    const n1 = (k % 6) + 3;        // 3–8 rows for Cartesian scenarios
+    const n2 = (k % 4) + 2;        // 2–5 rows
+    const p  = k % 25;
+
+    switch (p) {
+        case 0:
+            add("practical","nulls",
+                `What does this query return?\nSELECT * FROM ${t}\nWHERE ${c} = NULL;`,
+                `Zero rows — = NULL always evaluates to UNKNOWN`,
+                `All rows where ${c} is NULL`,
+                "A syntax error at runtime",
+                `Same result as WHERE ${c} IS NOT NULL`);
+            break;
+        case 1:
+            add("practical","aggregates",
+                `Identify the problem:\nSELECT ${c}, ${c2}, COUNT(*)\nFROM ${t}\nGROUP BY ${c};`,
+                `Error: ${c2} is in SELECT but not in GROUP BY`,
+                "Valid — any column can appear alongside an aggregate",
+                "Error: COUNT(*) cannot appear with a GROUP BY",
+                "Error: GROUP BY must use an alias, not a column name");
+            break;
+        case 2:
+            add("practical","aggregates",
+                `What happens when you run this?\nSELECT ${c}, COUNT(*) n\nFROM ${t}\nWHERE COUNT(*) > 2\nGROUP BY ${c};`,
+                "Error — aggregate functions are not allowed in WHERE; use HAVING",
+                "Returns groups with count > 2 correctly",
+                "Runs fine; WHERE filters rows before aggregation",
+                "WHERE and HAVING are interchangeable here");
+            break;
+        case 3:
+            add("practical","joins",
+                `${t} has a row where ${c} = 999; ${t2} has no matching row.\nWhat appears in b.${c2} for that ${t} row?\nSELECT a.${c}, b.${c2}\nFROM ${t} a\nLEFT JOIN ${t2} b ON a.${c} = b.${c};`,
+                `NULL — unmatched left rows are kept with NULL on the right side`,
+                "The row is excluded from the result",
+                "An error is raised for the unmatched key",
+                `b.${c2} takes the column's default value`);
+            break;
+        case 4:
+            add("practical","joins",
+                `${t} has ${n1} rows; ${t2} has ${n2} rows.\nHow many rows does this return?\nSELECT * FROM ${t} CROSS JOIN ${t2};`,
+                `${n1 * n2} — Cartesian product (${n1} × ${n2})`,
+                `${n1} — only ${t} rows`,
+                `${n1 + n2} — rows from both tables appended`,
+                `${Math.min(n1, n2)} — only matching-key rows`);
+            break;
+        case 5:
+            add("practical","basics",
+                `Which clause is logically evaluated FIRST?\nSELECT ${c2}, COUNT(*) cnt\nFROM ${t}\nWHERE ${c} > 0\nGROUP BY ${c2}\nHAVING cnt > 1\nORDER BY cnt DESC;`,
+                "FROM",
+                "SELECT",
+                "WHERE",
+                "ORDER BY");
+            break;
+        case 6:
+            add("practical","set_ops",
+                `Both queries return the row (1, 'active').\nHow does UNION ALL handle the duplicate?\n(SELECT ${c} FROM ${t})\nUNION ALL\n(SELECT ${c} FROM ${t2});`,
+                "Both copies are kept — UNION ALL never removes duplicates",
+                "The duplicate is removed — UNION ALL deduplicates",
+                "An error is raised for the duplicate row",
+                "Only one of the two queries executes");
+            break;
+        case 7:
+            add("practical","window",
+                `Is the row numbering deterministic?\nSELECT ${c},\n       ROW_NUMBER() OVER (PARTITION BY ${c2}) rn\nFROM ${t};`,
+                "No — without ORDER BY inside OVER, order within each partition is undefined",
+                "Yes — partitions are always sorted by insertion order",
+                "Yes — ROW_NUMBER is always deterministic",
+                "Error — ORDER BY is required inside OVER with ROW_NUMBER");
+            break;
+        case 8:
+            add("practical","window",
+                `What is prev_${c} for the very first row in the ordering?\nSELECT ${c2},\n       ${c},\n       LAG(${c}) OVER (ORDER BY ${c2}) AS prev_${c}\nFROM ${t};`,
+                `NULL — no preceding row exists for the first row`,
+                `The value of ${c} for the last row in the table`,
+                "0 (zero default when there is no previous row)",
+                "An error is raised for the first row");
+            break;
+        case 9:
+            add("practical","subqueries",
+                `The inner WHERE always filters out every row.\nWhat does EXISTS return for each outer row?\nSELECT * FROM ${t} o\nWHERE EXISTS (\n  SELECT 1 FROM ${t2} i\n  WHERE i.${c} = o.${c} AND 1 = 0\n);`,
+                "FALSE — EXISTS is false when the subquery returns no rows",
+                "TRUE — EXISTS ignores the inner WHERE conditions",
+                "NULL — three-valued logic makes this unknown",
+                "Error — subquery must always return at least one row");
+            break;
+        case 10:
+            add("practical","aggregates",
+                `${t} has 6 rows; ${c} is NULL in 2 of them.\nWhat does this return?\nSELECT COUNT(*), COUNT(${c}) FROM ${t};`,
+                `6, 4 — COUNT(*) counts all rows; COUNT(${c}) skips NULLs`,
+                "4, 4 — both functions skip NULLs",
+                "6, 6 — both functions count all rows",
+                `Error — you cannot mix COUNT(*) and COUNT(${c})`);
+            break;
+        case 11:
+            add("practical","nulls",
+                "In SQL three-valued logic, what does NULL AND FALSE evaluate to?",
+                "FALSE — AND with FALSE is always FALSE regardless of the other operand",
+                "NULL",
+                "TRUE",
+                "UNKNOWN (distinct from NULL in the standard)");
+            break;
+        case 12:
+            add("practical","cte",
+                `Does this query run without error?\nWITH a AS (\n  SELECT ${c} FROM ${t}\n),\nb AS (\n  SELECT * FROM a WHERE ${c} > 0\n)\nSELECT * FROM b;`,
+                "Yes — b can reference a defined earlier in the same WITH",
+                "No — CTEs cannot reference each other",
+                "No — WITH must contain exactly one named query",
+                "Only if both CTEs are declared RECURSIVE");
+            break;
+        case 13:
+            add("practical","optimization",
+                `Why might this query NOT use an index on ${c}?\nSELECT * FROM ${t}\nWHERE UPPER(${c}) = 'ACTIVE';`,
+                `UPPER() wraps ${c}, preventing an index seek on the raw column`,
+                "UPPER() always improves index efficiency",
+                "The optimizer always ignores scalar functions in WHERE",
+                "Indexes do not work with string columns");
+            break;
+        case 14:
+            add("practical","dml_ddl",
+                `What is the key behavioural difference?\nA: TRUNCATE TABLE ${t};\nB: DELETE FROM ${t} WHERE ${c} IS NOT NULL;`,
+                "B is row-by-row with a predicate and fully logged; A removes all rows with minimal logging",
+                "Both statements are identical in every database",
+                "A can be rolled back; B cannot",
+                "B removes only non-NULL rows; A removes nothing");
+            break;
+        case 15:
+            add("practical","joins",
+                `${t} has ${n1} rows; ${t2} has ${n2} rows.\nThe ON / WHERE was accidentally omitted.\nHow many rows does this return?\nSELECT * FROM ${t} a, ${t2} b;`,
+                `${n1 * n2} — Cartesian product from the missing join condition`,
+                `${n1} — only ${t} rows`,
+                `${n1 + n2} — rows from both tables appended`,
+                "0 — missing WHERE means no rows pass");
+            break;
+        case 16:
+            add("practical","aggregates",
+                `Does this run, and what does it return?\nSELECT COUNT(*) cnt\nFROM ${t}\nHAVING COUNT(*) > 0;`,
+                "Yes — the whole table is one implicit group; returns one row if any rows exist",
+                "Error — HAVING requires a GROUP BY clause",
+                `Error — COUNT(*) cannot appear in both SELECT and HAVING`,
+                `Returns every row of ${t} filtered by the count`);
+            break;
+        case 17:
+            add("practical","window",
+                `Scores: 90, 90, 80, 70 ordered DESC.\nWhat is (RANK, DENSE_RANK) for the row with score = 80?\nSELECT score,\n       RANK()       OVER (ORDER BY score DESC) r,\n       DENSE_RANK() OVER (ORDER BY score DESC) dr\nFROM ${t};`,
+                "(3, 2) — two rows tie at 1; RANK skips to 3, DENSE_RANK goes to 2",
+                "(2, 2) — both functions agree after a tie",
+                "(3, 3) — both leave a gap after a tie",
+                "(2, 3) — DENSE_RANK skips; RANK does not");
+            break;
+        case 18:
+            add("practical","subqueries",
+                `${t2} has 3 rows. What happens when this runs?\nSELECT ${c},\n       (SELECT ${c2} FROM ${t2}) AS x\nFROM ${t};`,
+                "Runtime error — scalar subquery returned more than one row",
+                `The first row's ${c2} value is silently used`,
+                `The query auto-aggregates ${t2} to one row`,
+                `Three copies of each ${t} row are returned`);
+            break;
+        case 19:
+            add("practical","indexes",
+                `An index exists on (${c}, ${c2}).\nCan this query use that index for a seek?\nSELECT * FROM ${t}\nWHERE ${c2} = 'active';`,
+                `No — filtering only ${c2} skips the leading column ${c}; leftmost-prefix rule not satisfied`,
+                "Yes — composite indexes cover any subset of their columns equally",
+                `Yes — ${c2} is in the index so seeks always work`,
+                "No — composite indexes never speed up equality predicates");
+            break;
+        case 20:
+            add("practical","basics",
+                `How many distinct rows are returned?\n-- ${t} contains: (1,'a'), (1,'b'), (1,'a'), (2,'a')\nSELECT DISTINCT ${c}, ${c2} FROM ${t};`,
+                `3 — DISTINCT deduplicates the (${c}, ${c2}) pair; (1,'a') appears once`,
+                `2 — only unique values of the first column ${c}`,
+                "4 — DISTINCT has no effect on two-column selects",
+                `1 — DISTINCT keeps only the row with the lowest ${c}`);
+            break;
+        case 21:
+            add("practical","aggregates",
+                `No rows match the filter. What does MAX return?\nSELECT MAX(${c}) FROM ${t}\nWHERE 1 = 0;`,
+                "One row with MAX = NULL",
+                "Zero rows returned",
+                "Error — MAX on an empty set is undefined",
+                "One row with MAX = 0");
+            break;
+        case 22:
+            add("practical","joins",
+                `Both tables have rows where ${c} IS NULL.\nDo those NULL rows join with each other?\nSELECT *\nFROM ${t} a\nJOIN ${t2} b ON a.${c} = b.${c};`,
+                "No — NULL = NULL is UNKNOWN, not TRUE; NULLs never match in a JOIN",
+                "Yes — NULLs are treated as equal in ON conditions",
+                "Only if both sides are NULL simultaneously (special NULL-safe rule)",
+                "Yes — but only with INNER JOIN, not OUTER JOIN");
+            break;
+        case 23:
+            add("practical","set_ops",
+                `What rows does this return?\n(SELECT ${c} FROM ${t})\nEXCEPT\n(SELECT ${c} FROM ${t2});`,
+                `Values in ${t} that do not appear in ${t2}`,
+                `Values that appear in both ${t} and ${t2}`,
+                `All values from both ${t} and ${t2}`,
+                `Values in ${t2} that do not appear in ${t}`);
+            break;
+        case 24:
+            add("practical","window",
+                `${t} has 10 rows. What are the bucket sizes?\nSELECT ${c}, NTILE(4) OVER (ORDER BY ${c2}) bucket\nFROM ${t};`,
+                "3, 3, 2, 2 — rows distributed as evenly as possible; larger buckets first",
+                "2, 2, 3, 3 — smaller buckets come first",
+                "4, 3, 2, 1 — strictly decreasing bucket sizes",
+                "All 4 buckets have exactly 2 rows (remainder discarded)");
+            break;
+        default:
+            throw new Error(`unknown practical pattern ${p}`);
+    }
+}
 
 writeFileSync(
     OUT,
-    JSON.stringify(
-        {
-            version: 2,
-            topicLabels,
-            questions: finalList,
-        },
-        null,
-        0
-    )
+    JSON.stringify({ version: 4, topicLabels, questions }, null, 0)
 );
 
-console.log(`Wrote ${finalList.length} questions to ${OUT}`);
+const th = questions.filter((q) => q.type === "theoretical").length;
+const pr = questions.filter((q) => q.type === "practical").length;
+console.log(`Wrote ${questions.length} questions → ${OUT}`);
+console.log(`  Theoretical: ${th}`);
+console.log(`  Practical:   ${pr}`);

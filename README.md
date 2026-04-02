@@ -77,7 +77,7 @@ One-click copy to clipboard.
 | **Skills** | Tech stack |
 | **Contact** | Links + resume |
 | **Blogs** | Placeholder |
-| **Fun** | SQL MCQ quiz (10 questions from a 500-question pool) |
+| **Fun** | SQL MCQ quiz (10 timed questions; read-query stems, short answers) |
 
 ---
 
@@ -91,7 +91,7 @@ After each attempt, `api/send-quiz-email.js` emails **only you** (default **rush
    - `RESEND_FROM` — optional; defaults to `Rushikesh Portfolio <quiz@rushikesh.wagh>`. It **must** match whatever domain Resend shows as verified (if yours is e.g. `rushikeshwagh.com`, set `RESEND_FROM` to `Rushikesh Portfolio <quiz@rushikeshwagh.com>` in Vercel).
    - `QUIZ_OWNER_EMAIL` — defaults to rushikeshwagh43@gmail.com
 
-Regenerate the question pool after editing `scripts/generate-sql-quiz.mjs`:
+Regenerate `public/data/sql-quiz.json` after editing `scripts/generate-sql-quiz.mjs`:
 
 ```bash
 node scripts/generate-sql-quiz.mjs
@@ -103,6 +103,7 @@ node scripts/generate-sql-quiz.mjs
 
 - **HTML / CSS / JS** — no framework, no build step, no npm for the static site
 - **Vercel** — static files from `public/` plus `/api` serverless routes
+- **Deploy marker** — footer `Rev. …` is read from `script.js?v=…` in `index.html`; change `?v=` when you ship so caches refresh and the live revision is obvious
 - **Tools** — 100% client-side in the browser
 - **SQL quiz notify** — `api/send-quiz-email.js` + Resend (owner only)
 

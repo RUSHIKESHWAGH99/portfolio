@@ -692,6 +692,17 @@ body {
     color: var(--text-dim); font-size: 0.85rem;
     background: linear-gradient(to top, rgba(124, 106, 255, 0.02), transparent);
 }
+.footer-rev-wrap { white-space: nowrap; }
+.footer-revision {
+    font-size: 0.78rem; font-family: var(--mono); font-weight: 500;
+    padding: 2px 7px; border-radius: 5px;
+    border: 1px solid var(--border);
+    background: rgba(124, 106, 255, 0.09);
+    color: var(--text);
+}
+[data-theme="light"] .footer-revision {
+    background: rgba(124, 106, 255, 0.06);
+}
 
 /* ── Animations ────────────────────────────────────────────── */
 .fade-up {
@@ -1137,9 +1148,56 @@ body {
     user-select: none;
     -moz-user-select: none;
 }
+/* ── Question type badge ──────────────────────────────────────────────── */
+.sql-quiz-q-type-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    line-height: 1.8;
+}
+.sql-quiz-q-type-badge.is-concept {
+    background: rgba(124, 106, 255, 0.14);
+    color: var(--accent);
+    border: 1px solid rgba(124, 106, 255, 0.32);
+}
+.sql-quiz-q-type-badge.is-query {
+    background: rgba(46, 213, 115, 0.11);
+    color: #2ed573;
+    border: 1px solid rgba(46, 213, 115, 0.28);
+}
+[data-theme="light"] .sql-quiz-q-type-badge.is-query {
+    color: #1a9e4a;
+    border-color: rgba(26, 158, 74, 0.3);
+    background: rgba(26, 158, 74, 0.07);
+}
+/* Inline validation message */
+.sql-quiz-inline-err {
+    color: #f78c6c;
+    font-size: 0.82rem;
+    margin-top: 8px;
+}
 .sql-quiz-q-wrap { margin-bottom: 24px; }
 .sql-quiz-q-text {
     font-size: 1.02rem; line-height: 1.55; margin-bottom: 18px; color: var(--text);
+}
+.sql-quiz-q-text.sql-quiz-q-code {
+    font-family: var(--mono);
+    font-size: 0.86rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+}
+[data-theme="light"] .sql-quiz-q-text.sql-quiz-q-code {
+    background: rgba(0, 0, 0, 0.04);
 }
 .sql-quiz-options { display: flex; flex-direction: column; gap: 10px; }
 .sql-quiz-opt {

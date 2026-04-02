@@ -1,6 +1,20 @@
 // ── Site views (tabs + hash) ─────────────────────────────────
 const VIEW_IDS = ["home", "journey", "tools", "projects", "skills", "contact", "blogs", "fun"];
 
+/**
+ * Fills quiz name/email from ?name=&email= so shared links work.
+ */
+function applyQuizQueryPrefill() {
+    const params = new URLSearchParams(window.location.search);
+    const nameEl = document.getElementById("sql-quiz-name");
+    const emailEl = document.getElementById("sql-quiz-email");
+    if (!nameEl || !emailEl) return;
+    const qn = params.get("name");
+    const qe = params.get("email");
+    if (qn != null && String(qn).trim() !== "") nameEl.value = String(qn).trim().slice(0, 120);
+    if (qe != null && String(qe).trim() !== "") emailEl.value = String(qe).trim().slice(0, 200);
+}
+
 function showView(name) {
     const n = VIEW_IDS.includes(name) ? name : "home";
     VIEW_IDS.forEach((id) => {
@@ -20,8 +34,20 @@ function showView(name) {
     // Scroll the active tab into view inside the scrollable tab strip
     const activeTab = document.querySelector(`.site-tab[data-view="${n}"]`);
     activeTab?.scrollIntoView({ block: "nearest", inline: "center" });
-    history.replaceState(null, "", `#${n}`);
+    // Keep ?query= params (e.g. ?name=&email=); a bare "#tab" can drop the search string in some browsers.
+    history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}#${n}`
+    );
     window.scrollTo({ top: 0, behavior: "instant" });
+    // Fun tab lives in a view that starts display:none — reveal animations may never run; force visible.
+    if (n === "fun") {
+        requestAnimationFrame(() => {
+            document.querySelectorAll("#view-fun .reveal").forEach((el) => el.classList.add("visible"));
+            applyQuizQueryPrefill();
+        });
+    }
 }
 
 function initViews() {
@@ -858,6 +884,24 @@ function initSqlQuiz() {
     const btnPrev = document.getElementById("sql-quiz-prev");
     const btnNext = document.getElementById("sql-quiz-next");
     const btnRetry = document.getElementById("sql-quiz-retry");
+    const btnStart = document.getElementById("sql-quiz-start");
+
+    if (
+        !regPanel ||
+        !playPanel ||
+        !resPanel ||
+        !form ||
+        !loadErr ||
+        !qWrap ||
+        !progLabel ||
+        !btnPrev ||
+        !btnNext ||
+        !btnRetry ||
+        !btnStart
+    ) {
+        console.warn("SQL quiz: missing required DOM nodes");
+        return;
+    }
     const proCard = document.getElementById("sql-quiz-pro-card");
     const resultStandard = document.getElementById("sql-quiz-result-standard");
     const scoreLine = document.getElementById("sql-quiz-score-line");
@@ -875,9 +919,11 @@ function initSqlQuiz() {
     /** @type {null | { name: string, email: string, score: number, tier: string, topicLines: string[], timedOut: boolean, atIso: string }} */
     let lastScoreSnapshot = null;
 
-    let pool = null;
-    let topicLabels = {};
-    let selected = [];
+    let pool             = null;   // flat array of all questions
+    let theoreticalPool  = [];     // type === "theoretical"
+    let practicalPool    = [];     // type === "practical"
+    let topicLabels      = {};
+    let selected         = [];
     let answers = [];
     let qIndex = 0;
     let participantName = "";
@@ -950,10 +996,15 @@ function initSqlQuiz() {
 
     async function ensurePool() {
         if (pool) return;
-        const r = await fetch("/data/sql-quiz.json");
+        const r = await fetch(new URL("/data/sql-quiz.json", window.location.origin));
         if (!r.ok) throw new Error("load");
         const data = await r.json();
-        pool = data.questions;
+        const qs = data.questions;
+        if (!Array.isArray(qs) || qs.length < 10) throw new Error("load");
+        pool = qs;
+        theoreticalPool = qs.filter((q) => q.type === "theoretical");
+        practicalPool   = qs.filter((q) => q.type === "practical");
+        if (theoreticalPool.length < 5 || practicalPool.length < 5) throw new Error("load");
         topicLabels = data.topicLabels || {};
     }
 
@@ -961,23 +1012,30 @@ function initSqlQuiz() {
         const q = selected[qIndex];
         progLabel.textContent = `Question ${qIndex + 1} / 10`;
         qWrap.innerHTML = "";
-        const p = document.createElement("p");
-        p.className = "sql-quiz-q-text";
+
+        // Type badge: "Concept" (theoretical) or "Read the query" (practical)
+        const badge       = document.createElement("span");
+        const isPractical = q.type === "practical";
+        badge.className   = `sql-quiz-q-type-badge ${isPractical ? "is-query" : "is-concept"}`;
+        badge.textContent = isPractical ? "Read the query" : "Concept";
+        qWrap.appendChild(badge);
+
+        const p       = document.createElement("p");
+        p.className   = "sql-quiz-q-text sql-quiz-q-code";
         p.textContent = q.q;
         qWrap.appendChild(p);
+
         const opts = document.createElement("div");
         opts.className = "sql-quiz-options";
         q.options.forEach((text, oi) => {
             const lab = document.createElement("label");
             lab.className = "sql-quiz-opt";
             const inp = document.createElement("input");
-            inp.type = "radio";
-            inp.name = "sql-quiz-opt";
+            inp.type  = "radio";
+            inp.name  = "sql-quiz-opt";
             inp.value = String(oi);
             if (answers[qIndex] === oi) inp.checked = true;
-            inp.addEventListener("change", () => {
-                answers[qIndex] = oi;
-            });
+            inp.addEventListener("change", () => { answers[qIndex] = oi; });
             const sp = document.createElement("span");
             sp.textContent = text;
             lab.appendChild(inp);
@@ -985,7 +1043,7 @@ function initSqlQuiz() {
             opts.appendChild(lab);
         });
         qWrap.appendChild(opts);
-        btnPrev.hidden = qIndex === 0;
+        btnPrev.hidden      = qIndex === 0;
         btnNext.textContent = qIndex === 9 ? "Submit" : "Next";
     }
 
@@ -1116,7 +1174,7 @@ function initSqlQuiz() {
         emailStatus.textContent = "Recording your attempt…";
         emailStatus.className = "sql-quiz-email-status";
 
-        fetch("/api/send-quiz-email", {
+        fetch(new URL("/api/send-quiz-email", window.location.origin), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1177,7 +1235,7 @@ function initSqlQuiz() {
     }
 
     if (btnCopyBlurb) {
-        btnCopyBlurb.addEventListener(async () => {
+        btnCopyBlurb.addEventListener("click", async () => {
             if (!lastScoreSnapshot) return;
             const blurb = buildLinkedInBlurb(lastScoreSnapshot);
             try {
@@ -1195,9 +1253,9 @@ function initSqlQuiz() {
         });
     }
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    async function startQuizFromForm() {
         loadErr.hidden = true;
+        if (!form.reportValidity()) return;
         participantName = document.getElementById("sql-quiz-name").value.trim();
         participantEmail = document.getElementById("sql-quiz-email").value.trim();
         try {
@@ -1207,9 +1265,12 @@ function initSqlQuiz() {
             loadErr.hidden = false;
             return;
         }
-        const copy = [...pool];
-        shuffleInPlace(copy);
-        selected = copy.slice(0, 10);
+        // Pick 5 theoretical + 5 practical, then interleave randomly
+        const thCopy = [...theoreticalPool];
+        const prCopy = [...practicalPool];
+        shuffleInPlace(thCopy);
+        shuffleInPlace(prCopy);
+        selected = shuffleInPlace([...thCopy.slice(0, 5), ...prCopy.slice(0, 5)]);
         answers = selected.map(() => null);
         qIndex = 0;
         quizCompleted = false;
@@ -1218,6 +1279,13 @@ function initSqlQuiz() {
         playPanel.hidden = false;
         renderQuestion();
         startQuizTimer();
+    }
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+    });
+    btnStart.addEventListener("click", () => {
+        void startQuizFromForm();
     });
 
     btnPrev.addEventListener("click", () => {
@@ -1229,9 +1297,19 @@ function initSqlQuiz() {
 
     btnNext.addEventListener("click", () => {
         if (answers[qIndex] === null || answers[qIndex] === undefined) {
-            window.alert("Please choose one answer before continuing.");
+            // Inline error instead of disruptive alert
+            let errMsg = qWrap.querySelector(".sql-quiz-inline-err");
+            if (!errMsg) {
+                errMsg = document.createElement("p");
+                errMsg.className = "sql-quiz-inline-err";
+                qWrap.appendChild(errMsg);
+            }
+            errMsg.textContent = "Choose an answer before continuing.";
             return;
         }
+        // Clear any lingering inline error
+        const prevErr = qWrap.querySelector(".sql-quiz-inline-err");
+        if (prevErr) prevErr.remove();
         if (qIndex < 9) {
             qIndex += 1;
             renderQuestion();
@@ -1248,9 +1326,11 @@ function initSqlQuiz() {
         playPanel.hidden = true;
         regPanel.hidden = false;
         form.reset();
-        selected = [];
-        answers = [];
-        pool = null;
+        selected        = [];
+        answers         = [];
+        pool            = null;
+        theoreticalPool = [];
+        practicalPool   = [];
         if (timerEl) {
             secondsLeft = SQL_QUIZ_TIME_SEC;
             timerEl.classList.remove("is-low", "is-critical");
@@ -1261,6 +1341,8 @@ function initSqlQuiz() {
         emailStatus.textContent = "";
         emailStatus.className = "sql-quiz-email-status";
     });
+
+    applyQuizQueryPrefill();
 }
 
 // ── Tool sub-tabs ─────────────────────────────────────────────
@@ -1286,6 +1368,18 @@ function initToolSwitcher() {
     });
 }
 
+/**
+ * Fills `#site-revision-label` from `script.js?v=…` on this page (single bump for cache + visible rev).
+ */
+function initSiteRevisionLabel() {
+    const el = document.getElementById("site-revision-label");
+    if (!el) return;
+    const sc = document.querySelector('script[src*="script.js"]');
+    const src = sc?.getAttribute("src") || "";
+    const m = src.match(/[?&]v=([^&]+)/);
+    el.textContent = m ? decodeURIComponent(m[1]) : "local";
+}
+
 // ── Boot ────────────────────────────────────────────────────
 initTheme();
 initViews();
@@ -1300,3 +1394,4 @@ initJsonFormatter();
 initSqlTool();
 initToolSwitcher();
 initSqlQuiz();
+initSiteRevisionLabel();

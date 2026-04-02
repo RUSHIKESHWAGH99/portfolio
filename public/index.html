@@ -795,15 +795,15 @@
     <section class="section" id="fun">
         <div class="container">
             <h2 class="section-title reveal">Fun</h2>
-            <p class="section-subtitle reveal">The Query Gauntlet — ten questions, one timer, five hundred possibilities in the vault.</p>
+            <p class="section-subtitle reveal">The Query Gauntlet — ten questions, one timer, read real SQL and spot the answer.</p>
 
-            <div id="sql-quiz-app" class="sql-quiz-app reveal">
+            <div id="sql-quiz-app" class="sql-quiz-app">
                 <div id="sql-quiz-reg" class="sql-quiz-panel">
                     <header class="sql-quiz-header">
                         <h3 class="sql-quiz-title"><span class="sql-quiz-title-main">The Query Gauntlet</span></h3>
                         <p class="sql-quiz-monikers" aria-label="Also known as">Clause <span class="sql-quiz-mid-dot">&amp;</span> Effect · Syntax Circuit · The JOIN Tribunal</p>
                     </header>
-                    <p class="sql-quiz-lead">Fundamentals through window functions, CTEs, indexes, and tuning — drawn from a 500-question vault. <strong>10 minutes</strong> on the clock. Copy is disabled during play. Add your name and email to begin; after the quiz you can <strong>download your score</strong> or <strong>share on LinkedIn</strong>.</p>
+                    <p class="sql-quiz-lead">5 concept questions + 5 read-the-query challenges — spot errors, predict output, and judge SQL behaviour across NULLs, JOINs, window functions, indexes, and CTEs. <strong>10 minutes</strong> on the clock. Copy is disabled during play. Add your name and email to begin; after the quiz you can <strong>download your score</strong> or <strong>share on LinkedIn</strong>.</p>
                     <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
                         <div class="form-grid">
                             <div class="form-field">
@@ -816,7 +816,7 @@
                             </div>
                         </div>
                         <p class="sql-quiz-privacy">Your name and email are used to log your attempt and to generate your score card. We do not email your results to you right now — use download or LinkedIn share after you finish.</p>
-                        <button type="submit" class="btn-tool" id="sql-quiz-start">Start quiz</button>
+                        <button type="button" class="btn-tool" id="sql-quiz-start">Start quiz</button>
                         <p id="sql-quiz-load-err" class="tool-error" hidden></p>
                     </form>
                 </div>
@@ -867,10 +867,17 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>Built by Rushikesh Wagh &middot; Static site (HTML, CSS, JS) &middot; 2026</p>
+            <p>
+                Built by Rushikesh Wagh &middot; Static site (HTML, CSS, JS) &middot; 2026
+                &middot;
+                <span
+                    class="footer-rev-wrap"
+                    title="Live deploy marker — matches script.js?v= in this page; change that query when you ship a meaningful update."
+                >Rev. <code id="site-revision-label" class="footer-revision">…</code></span>
+            </p>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=quiz4"></script>
 </body>
 </html>
