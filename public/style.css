@@ -1331,6 +1331,26 @@ body {
         radial-gradient(circle at top right, rgba(124,106,255,0.18), transparent 34%),
         linear-gradient(180deg, rgba(124,106,255,0.08), transparent 100%);
 }
+.query-gauntlet-intro {
+    text-align: center;
+}
+.query-gauntlet-intro .fun-game-badge {
+    margin-left: auto;
+    margin-right: auto;
+}
+.query-gauntlet-title {
+    width: 100%;
+    margin-bottom: 18px;
+}
+.query-gauntlet-intro .fun-game-meta {
+    text-align: left;
+}
+.sql-quiz-reg-panel {
+    padding-top: 4px;
+}
+.sql-quiz-reg-panel .sql-quiz-reg-form {
+    margin-top: 0;
+}
 .fun-game-badge {
     display: inline-block;
     width: fit-content;
