@@ -819,8 +819,9 @@
 
                     <div id="sql-quiz-app" class="sql-quiz-app">
                         <div id="sql-quiz-reg" class="sql-quiz-panel sql-quiz-reg-panel">
+                            <p class="sql-quiz-reg-tagline">10 questions &middot; 10 minutes &middot; no lifelines</p>
                             <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
-                                <div class="form-grid">
+                                <div class="form-grid sql-quiz-reg-grid">
                                     <div class="form-field">
                                         <label for="sql-quiz-name">Name</label>
                                         <input id="sql-quiz-name" name="name" type="text" required autocomplete="name" maxlength="120" placeholder="Your name" />
@@ -830,9 +831,11 @@
                                         <input id="sql-quiz-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
                                     </div>
                                 </div>
-                                <p class="sql-quiz-privacy">Your name and email are used to log your attempt and to generate your score card. We do not email your results to you right now — use download or LinkedIn share after you finish.</p>
-                                <button type="button" class="btn-tool" id="sql-quiz-start">Start quiz</button>
-                                <p id="sql-quiz-load-err" class="tool-error" hidden></p>
+                                <p class="sql-quiz-privacy">Your name and email log your attempt and generate your score card. Results are not emailed — use download or LinkedIn share after you finish.</p>
+                                <div class="sql-quiz-reg-cta">
+                                    <button type="button" class="btn-tool sql-quiz-start-btn" id="sql-quiz-start">Start quiz &rarr;</button>
+                                    <p id="sql-quiz-load-err" class="tool-error" hidden></p>
+                                </div>
                             </form>
                         </div>
 
@@ -956,6 +959,6 @@
         </div>
     </footer>
 
-    <script src="script.js?v=fun11"></script>
+    <script src="script.js?v=fun12"></script>
 </body>
 </html>
