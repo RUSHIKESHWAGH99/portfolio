@@ -797,77 +797,99 @@
             <h2 class="section-title reveal">Fun</h2>
             <p class="section-subtitle reveal">Analytics games for data people — SQL quiz, daily word game &amp; metric blitz.</p>
 
-            <div id="sql-quiz-app" class="sql-quiz-app">
-                <div id="sql-quiz-reg" class="sql-quiz-panel">
-                    <header class="sql-quiz-header">
-                        <h3 class="sql-quiz-title"><span class="sql-quiz-title-main">The Query Gauntlet</span></h3>
-                        <p class="sql-quiz-monikers" aria-label="Also known as">Clause <span class="sql-quiz-mid-dot">&amp;</span> Effect · Syntax Circuit · The JOIN Tribunal</p>
-                    </header>
-                    <p class="sql-quiz-lead">10 questions · 10 minutes · no lifelines. Read real SQL, spot errors, predict output. Enter your name and go — certificate at the finish line.</p>
-                    <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label for="sql-quiz-name">Name</label>
-                                <input id="sql-quiz-name" name="name" type="text" required autocomplete="name" maxlength="120" placeholder="Your name" />
+            <div class="fun-games-stack">
+                <div class="fun-game-card fun-game-card-feature reveal" id="querygauntlet-card">
+                    <div class="fun-game-intro">
+                        <span class="fun-game-badge">Featured · SQL challenge</span>
+                        <h3 class="fun-game-title">The Query Gauntlet</h3>
+                        <p class="fun-game-desc">A deeper SQL challenge built around analytical thinking. You will read queries, reason through outputs, spot mistakes, and answer 10 timed questions.</p>
+                        <div class="fun-game-meta">
+                            <div class="fun-game-meta-block">
+                                <p class="fun-game-meta-label">Why play</p>
+                                <p class="fun-game-meta-copy">This is the best one to test practical SQL instincts, especially around joins, window functions, CTEs, and query logic.</p>
                             </div>
-                            <div class="form-field">
-                                <label for="sql-quiz-email">Email</label>
-                                <input id="sql-quiz-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+                            <div class="fun-game-meta-block">
+                                <p class="fun-game-meta-label">How to play</p>
+                                <p class="fun-game-meta-copy">Enter your name and email, finish 10 questions in 10 minutes, then download or share your score card. Hit pro analyst level for a celebration.</p>
                             </div>
                         </div>
-                        <p class="sql-quiz-privacy">Your name and email are used to log your attempt and to generate your score card. We do not email your results to you right now — use download or LinkedIn share after you finish.</p>
-                        <button type="button" class="btn-tool" id="sql-quiz-start">Start quiz</button>
-                        <p id="sql-quiz-load-err" class="tool-error" hidden></p>
-                    </form>
-                </div>
+                    </div>
 
-                <div id="sql-quiz-play" class="sql-quiz-panel sql-quiz-play-locked" hidden>
-                    <div class="sql-quiz-progress-row">
-                        <span id="sql-quiz-progress-label" class="sql-quiz-progress-label">Question 1 / 10</span>
-                        <span id="sql-quiz-timer" class="sql-quiz-timer" role="timer" aria-live="polite" aria-atomic="true">10:00</span>
-                    </div>
-                    <div id="sql-quiz-q-wrap" class="sql-quiz-q-wrap"></div>
-                    <div class="sql-quiz-nav">
-                        <button type="button" class="btn-tool secondary" id="sql-quiz-prev" hidden>Back</button>
-                        <button type="button" class="btn-tool" id="sql-quiz-next">Next</button>
-                    </div>
-                </div>
+                    <div id="sql-quiz-app" class="sql-quiz-app">
+                        <div id="sql-quiz-reg" class="sql-quiz-panel">
+                            <header class="sql-quiz-header">
+                                <h3 class="sql-quiz-title"><span class="sql-quiz-title-main">The Query Gauntlet</span></h3>
+                                <p class="sql-quiz-monikers" aria-label="Also known as">Clause <span class="sql-quiz-mid-dot">&amp;</span> Effect · Syntax Circuit · The JOIN Tribunal</p>
+                            </header>
+                            <p class="sql-quiz-lead">10 questions · 10 minutes · no lifelines. Read real SQL, spot errors, predict output. Enter your name and go — certificate at the finish line.</p>
+                            <form id="sql-quiz-reg-form" class="sql-quiz-reg-form">
+                                <div class="form-grid">
+                                    <div class="form-field">
+                                        <label for="sql-quiz-name">Name</label>
+                                        <input id="sql-quiz-name" name="name" type="text" required autocomplete="name" maxlength="120" placeholder="Your name" />
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="sql-quiz-email">Email</label>
+                                        <input id="sql-quiz-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+                                    </div>
+                                </div>
+                                <p class="sql-quiz-privacy">Your name and email are used to log your attempt and to generate your score card. We do not email your results to you right now — use download or LinkedIn share after you finish.</p>
+                                <button type="button" class="btn-tool" id="sql-quiz-start">Start quiz</button>
+                                <p id="sql-quiz-load-err" class="tool-error" hidden></p>
+                            </form>
+                        </div>
 
-                <div id="sql-quiz-results" class="sql-quiz-panel" hidden>
-                    <div id="sql-quiz-pro-card" class="sql-quiz-pro-card" hidden>
-                        <span class="sql-quiz-pro-badge">🏆 Pro analyst</span>
-                        <h3>Congratulations!</h3>
-                        <p>You scored <strong id="sql-quiz-pro-score"></strong>. You are operating at <strong>professional analyst</strong> level on this SQL set.</p>
-                    </div>
-                    <div id="sql-quiz-result-standard">
-                        <h3 id="sql-quiz-result-heading">Your results</h3>
-                        <p id="sql-quiz-score-line" class="sql-quiz-score-line"></p>
-                        <p id="sql-quiz-tier-msg" class="sql-quiz-tier-msg"></p>
-                        <div id="sql-quiz-topics-block" hidden>
-                            <h4 class="sql-quiz-subh">Topics to improve</h4>
-                            <p class="sql-quiz-topics-intro">Based on the questions you missed, spend time on:</p>
-                            <ul id="sql-quiz-topics-list" class="sql-quiz-topics-list"></ul>
+                        <div id="sql-quiz-play" class="sql-quiz-panel sql-quiz-play-locked" hidden>
+                            <div class="sql-quiz-progress-row">
+                                <span id="sql-quiz-progress-label" class="sql-quiz-progress-label">Question 1 / 10</span>
+                                <span id="sql-quiz-timer" class="sql-quiz-timer" role="timer" aria-live="polite" aria-atomic="true">10:00</span>
+                            </div>
+                            <div id="sql-quiz-q-wrap" class="sql-quiz-q-wrap"></div>
+                            <div class="sql-quiz-nav">
+                                <button type="button" class="btn-tool secondary" id="sql-quiz-prev" hidden>Back</button>
+                                <button type="button" class="btn-tool" id="sql-quiz-next">Next</button>
+                            </div>
+                        </div>
+
+                        <div id="sql-quiz-results" class="sql-quiz-panel" hidden>
+                            <div id="sql-quiz-pro-card" class="sql-quiz-pro-card" hidden>
+                                <span class="sql-quiz-pro-badge">🏆 Pro analyst</span>
+                                <h3>Congratulations!</h3>
+                                <p>You scored <strong id="sql-quiz-pro-score"></strong>. You are operating at <strong>professional analyst</strong> level on this SQL set.</p>
+                            </div>
+                            <div id="sql-quiz-result-standard">
+                                <h3 id="sql-quiz-result-heading">Your results</h3>
+                                <p id="sql-quiz-score-line" class="sql-quiz-score-line"></p>
+                                <p id="sql-quiz-tier-msg" class="sql-quiz-tier-msg"></p>
+                                <div id="sql-quiz-topics-block" hidden>
+                                    <h4 class="sql-quiz-subh">Topics to improve</h4>
+                                    <p class="sql-quiz-topics-intro">Based on the questions you missed, spend time on:</p>
+                                    <ul id="sql-quiz-topics-list" class="sql-quiz-topics-list"></ul>
+                                </div>
+                            </div>
+                            <p id="sql-quiz-email-status" class="sql-quiz-email-status" aria-live="polite"></p>
+                            <div id="sql-quiz-share-row" class="sql-quiz-share-row">
+                                <button type="button" class="btn-tool" id="sql-quiz-download">Download certificate</button>
+                                <button type="button" class="btn-tool secondary" id="sql-quiz-linkedin">Share on LinkedIn</button>
+                                <button type="button" class="btn-tool secondary" id="sql-quiz-copy-blurb">Copy post text</button>
+                            </div>
+                            <p id="sql-quiz-copy-hint" class="sql-quiz-copy-hint" hidden>Copied — paste into LinkedIn if the share window did not open.</p>
+                            <button type="button" class="btn-tool secondary" id="sql-quiz-retry">Try again</button>
                         </div>
                     </div>
-                    <p id="sql-quiz-email-status" class="sql-quiz-email-status" aria-live="polite"></p>
-                    <div id="sql-quiz-share-row" class="sql-quiz-share-row">
-                        <button type="button" class="btn-tool" id="sql-quiz-download">Download certificate</button>
-                        <button type="button" class="btn-tool secondary" id="sql-quiz-linkedin">Share on LinkedIn</button>
-                        <button type="button" class="btn-tool secondary" id="sql-quiz-copy-blurb">Copy post text</button>
-                    </div>
-                    <p id="sql-quiz-copy-hint" class="sql-quiz-copy-hint" hidden>Copied — paste into LinkedIn if the share window did not open.</p>
-                    <button type="button" class="btn-tool secondary" id="sql-quiz-retry">Try again</button>
                 </div>
-            </div>
-
-            <!-- ── More games ──────────────────────────────── -->
-            <div class="fun-games-row">
 
                 <!-- SQL Word — daily Wordle for SQL keywords -->
                 <div class="fun-game-card reveal" id="sqlword-card">
                     <span class="fun-game-badge">Daily · resets at midnight</span>
                     <h3 class="fun-game-title">SQL Word</h3>
-                    <p class="fun-game-desc">Guess the 5-letter SQL / data keyword. 6 tries. New word every day.</p>
+                    <p class="fun-game-desc">A quick Wordle-style game for SQL and analytics people. Guess the hidden 5-letter word in 6 tries using the color hints after every attempt.</p>
+                    <div class="fun-game-meta">
+                        <div class="fun-game-meta-block">
+                            <p class="fun-game-meta-label">How to play</p>
+                            <p class="fun-game-meta-copy">Type a 5-letter word, press Enter, and use the green / yellow / gray hints to narrow it down. There is one shared word per day.</p>
+                        </div>
+                    </div>
                     <div id="sw-grid" class="sw-grid" role="group" aria-label="Guess grid"></div>
                     <div id="sw-keyboard" class="sw-keyboard" aria-label="On-screen keyboard"></div>
                     <p id="sw-message" class="sw-message" aria-live="polite"></p>
@@ -878,7 +900,13 @@
                 <div class="fun-game-card reveal" id="metricblitz-card">
                     <span class="fun-game-badge">Blitz · 30 seconds</span>
                     <h3 class="fun-game-title">Metric Blitz</h3>
-                    <p class="fun-game-desc">5 KPI &amp; SQL questions. 30 seconds on the clock. No looking it up.</p>
+                    <p class="fun-game-desc">A fast KPI and analytics reflex test. Each round randomly picks 5 questions from a 100-question bank, so the challenge feels fresh every time.</p>
+                    <div class="fun-game-meta">
+                        <div class="fun-game-meta-block">
+                            <p class="fun-game-meta-label">How to play</p>
+                            <p class="fun-game-meta-copy">Start the round, answer 5 multiple-choice questions before the 30-second timer ends, and aim for a perfect score to unlock the celebration state.</p>
+                        </div>
+                    </div>
                     <div id="mb-reg" class="mb-state">
                         <button type="button" class="btn-tool" id="mb-start">Start Blitz</button>
                     </div>
@@ -895,7 +923,6 @@
                         <button type="button" class="btn-tool secondary" id="mb-retry">Play again</button>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
@@ -916,6 +943,6 @@
         </div>
     </footer>
 
-    <script src="script.js?v=quiz6"></script>
+    <script src="script.js?v=fun7"></script>
 </body>
 </html>

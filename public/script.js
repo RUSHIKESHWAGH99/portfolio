@@ -867,11 +867,69 @@ function shuffleInPlace(arr) {
 }
 
 /**
+ * Returns a random subset without repeating items.
+ *
+ * @template T
+ * @param {T[]} items
+ * @param {number} count
+ * @returns {T[]}
+ */
+function pickRandomItems(items, count) {
+    return shuffleInPlace([...items]).slice(0, Math.max(0, count));
+}
+
+/**
+ * Adds a short congratulations burst on top of a game card.
+ *
+ * @param {HTMLElement | null} cardEl
+ * @param {{ pieces?: number, durationMs?: number }} [options]
+ */
+function triggerFunCelebration(cardEl, options) {
+    if (!cardEl) return;
+
+    const pieces = options?.pieces ?? 28;
+    const durationMs = options?.durationMs ?? 2100;
+    const colors = ["#7c6aff", "#9d8fff", "#ffd76a", "#5eead4", "#ff8fab"];
+
+    const activeTimerId = Number(cardEl.dataset.celebrationTimerId || 0);
+    if (activeTimerId) window.clearTimeout(activeTimerId);
+
+    const existingBurst = cardEl.querySelector(".fun-win-burst");
+    if (existingBurst) existingBurst.remove();
+
+    cardEl.classList.add("is-celebrating");
+
+    const burst = document.createElement("div");
+    burst.className = "fun-win-burst";
+
+    for (let idx = 0; idx < pieces; idx++) {
+        const piece = document.createElement("span");
+        piece.className = "fun-win-confetti";
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = colors[idx % colors.length];
+        piece.style.animationDelay = `${Math.floor(Math.random() * 180)}ms`;
+        piece.style.setProperty("--burst-x", `${Math.floor(Math.random() * 120) - 60}px`);
+        burst.appendChild(piece);
+    }
+
+    cardEl.appendChild(burst);
+
+    const timerId = window.setTimeout(() => {
+        burst.remove();
+        cardEl.classList.remove("is-celebrating");
+        delete cardEl.dataset.celebrationTimerId;
+    }, durationMs);
+
+    cardEl.dataset.celebrationTimerId = String(timerId);
+}
+
+/**
  * Wires the 10-question SQL MCQ flow: registration, play, results, email via API.
  */
 function initSqlQuiz() {
     const app = document.getElementById("sql-quiz-app");
     if (!app) return;
+    const quizCard = document.getElementById("querygauntlet-card");
 
     const regPanel = document.getElementById("sql-quiz-reg");
     const playPanel = document.getElementById("sql-quiz-play");
@@ -1263,7 +1321,8 @@ function initSqlQuiz() {
             tierMsg.textContent =
                 "You are intermediate and close to professional analyst level. Sharpen the areas below to close the gap.";
         } else {
-            tierMsg.textContent = "Strong performance across analytical SQL concepts.";
+            tierMsg.textContent = "Outstanding work. You cleared the gauntlet with pro-level SQL instincts.";
+            triggerFunCelebration(quizCard, { pieces: 34, durationMs: 2400 });
         }
 
         topicsList.innerHTML = "";
@@ -1522,6 +1581,7 @@ function initSqlWord() {
     const kbEl     = document.getElementById("sw-keyboard");
     const msgEl    = document.getElementById("sw-message");
     const shareBtn = document.getElementById("sw-share");
+    const sqlWordCard = document.getElementById("sqlword-card");
     if (!gridEl || !kbEl || !msgEl) return;
 
     // Derive today's word from a fixed epoch so everyone shares the same word.
@@ -1536,6 +1596,7 @@ function initSqlWord() {
     const guessResults = /** @type {string[][]} */ ([]);
     const letterStates = /** @type {Record<string,string>} */ ({});
     let done = false;
+    let messageTimerId = /** @type {number | null} */ (null);
 
     // Build grid cells
     for (let r = 0; r < ROWS; r++) {
@@ -1596,11 +1657,24 @@ function initSqlWord() {
      * @param {string} text
      * @param {number} [duration=2400] - 0 to persist.
      */
-    function showSwMsg(text, duration) {
+    function showSwMsg(text, duration, isWin) {
         if (!msgEl) return;
+        if (messageTimerId !== null) {
+            window.clearTimeout(messageTimerId);
+            messageTimerId = null;
+        }
         msgEl.textContent = text;
+        msgEl.classList.toggle("is-win", Boolean(isWin));
         const ms = duration === undefined ? 2400 : duration;
-        if (ms > 0) setTimeout(() => { if (msgEl.textContent === text) msgEl.textContent = ""; }, ms);
+        if (ms > 0) {
+            messageTimerId = window.setTimeout(() => {
+                if (msgEl.textContent === text) {
+                    msgEl.textContent = "";
+                    msgEl.classList.remove("is-win");
+                }
+                messageTimerId = null;
+            }, ms);
+        }
     }
 
     /**
@@ -1679,9 +1753,21 @@ function initSqlWord() {
         const won = guess === TARGET;
         if (won || currentRow === ROWS - 1) {
             done = true;
-            const msgs = ["🔥 Genius!", "💡 Magnificent!", "✨ Impressive!", "👏 Splendid!", "🎉 Great!", "😅 Phew!"];
+            const msgs = [
+                "Perfect start. You solved today's SQL Word in one shot.",
+                "Excellent. You cracked today's SQL Word in two tries.",
+                "Sharp work. SQL Word solved.",
+                "Nice one. You found the word with room to spare.",
+                "Well played. You got there.",
+                "Clutch finish. SQL Word solved on the last row.",
+            ];
             setTimeout(() => {
-                showSwMsg(won ? (msgs[currentRow] || "Correct!") : `The word was ${TARGET}`, 0);
+                if (won) {
+                    showSwMsg(msgs[currentRow] || "Correct!", 0, true);
+                    triggerFunCelebration(sqlWordCard, { pieces: 24, durationMs: 2200 });
+                } else {
+                    showSwMsg(`The word was ${TARGET}`, 0, false);
+                }
                 if (shareBtn) shareBtn.hidden = false;
             }, COLS * 100 + 220);
         }
@@ -1723,8 +1809,8 @@ function initSqlWord() {
             const word    = String(dayIndex % WORDS.length + 1);
             const text    = `SQL Word #${word} ${result}\n\n${gridText}\n\nrushikeshwagh.vercel.app/#fun`;
             navigator.clipboard.writeText(text)
-                .then(() => showSwMsg("Copied to clipboard!"))
-                .catch(() => showSwMsg("Copy not supported in this browser"));
+                .then(() => showSwMsg("Copied to clipboard!", 2400, false))
+                .catch(() => showSwMsg("Copy not supported in this browser", 2400, false));
         });
     }
 }
@@ -1732,43 +1818,230 @@ function initSqlWord() {
 // ── Metric Blitz (5-question KPI speed round) ────────────────
 
 /**
+ * Builds a multiple-choice question and shuffles the option order.
+ *
+ * @param {string} prompt
+ * @param {string} correctOption
+ * @param {string[]} wrongOptions
+ * @returns {{ q: string, opts: string[], ans: number }}
+ */
+function createMetricBlitzQuestion(prompt, correctOption, wrongOptions) {
+    const options = pickRandomItems([correctOption, ...wrongOptions], 4);
+    return {
+        q: prompt,
+        opts: options,
+        ans: options.indexOf(correctOption),
+    };
+}
+
+/**
+ * Formats currency values without trailing decimal places.
+ *
+ * @param {number} amount
+ * @returns {string}
+ */
+function formatMetricCurrency(amount) {
+    return `$${amount.toLocaleString("en-US")}`;
+}
+
+/**
+ * Formats percentages with one decimal place for compact display.
+ *
+ * @param {number} value
+ * @returns {string}
+ */
+function formatMetricPercent(value) {
+    return `${value.toFixed(1)}%`;
+}
+
+/**
+ * Creates the 100-question Metric Blitz bank.
+ *
+ * @returns {{ q: string, opts: string[], ans: number }[]}
+ */
+function buildMetricBlitzQuestionBank() {
+    const questionBank = [];
+
+    const arpuScenarios = [
+        { revenue: 36000, users: 1200, wrongs: [formatMetricCurrency(18), formatMetricCurrency(45), formatMetricCurrency(60)] },
+        { revenue: 50000, users: 2000, wrongs: [formatMetricCurrency(10), formatMetricCurrency(40), formatMetricCurrency(100)] },
+        { revenue: 84000, users: 2800, wrongs: [formatMetricCurrency(21), formatMetricCurrency(35), formatMetricCurrency(56)] },
+        { revenue: 27000, users: 900, wrongs: [formatMetricCurrency(15), formatMetricCurrency(45), formatMetricCurrency(90)] },
+        { revenue: 96000, users: 3200, wrongs: [formatMetricCurrency(24), formatMetricCurrency(40), formatMetricCurrency(48)] },
+        { revenue: 45500, users: 1300, wrongs: [formatMetricCurrency(21), formatMetricCurrency(30), formatMetricCurrency(42)] },
+        { revenue: 72000, users: 1800, wrongs: [formatMetricCurrency(20), formatMetricCurrency(30), formatMetricCurrency(60)] },
+        { revenue: 61500, users: 1500, wrongs: [formatMetricCurrency(25), formatMetricCurrency(35), formatMetricCurrency(50)] },
+        { revenue: 108000, users: 3600, wrongs: [formatMetricCurrency(18), formatMetricCurrency(24), formatMetricCurrency(45)] },
+        { revenue: 39000, users: 1300, wrongs: [formatMetricCurrency(20), formatMetricCurrency(26), formatMetricCurrency(39)] },
+    ];
+    arpuScenarios.forEach((scenario) => {
+        questionBank.push(
+            createMetricBlitzQuestion(
+                `MRR = ${formatMetricCurrency(scenario.revenue)} and active users = ${scenario.users}. What is ARPU?`,
+                formatMetricCurrency(scenario.revenue / scenario.users),
+                scenario.wrongs,
+            ),
+        );
+    });
+
+    const aovScenarios = [
+        { revenue: 18000, orders: 240, wrongs: [formatMetricCurrency(45), formatMetricCurrency(60), formatMetricCurrency(90)] },
+        { revenue: 22500, orders: 300, wrongs: [formatMetricCurrency(50), formatMetricCurrency(90), formatMetricCurrency(120)] },
+        { revenue: 42000, orders: 560, wrongs: [formatMetricCurrency(42), formatMetricCurrency(60), formatMetricCurrency(84)] },
+        { revenue: 31200, orders: 390, wrongs: [formatMetricCurrency(52), formatMetricCurrency(65), formatMetricCurrency(96)] },
+        { revenue: 54000, orders: 600, wrongs: [formatMetricCurrency(45), formatMetricCurrency(75), formatMetricCurrency(120)] },
+        { revenue: 28600, orders: 220, wrongs: [formatMetricCurrency(78), formatMetricCurrency(104), formatMetricCurrency(156)] },
+        { revenue: 12500, orders: 125, wrongs: [formatMetricCurrency(50), formatMetricCurrency(75), formatMetricCurrency(125)] },
+        { revenue: 46800, orders: 360, wrongs: [formatMetricCurrency(90), formatMetricCurrency(104), formatMetricCurrency(156)] },
+        { revenue: 19800, orders: 180, wrongs: [formatMetricCurrency(66), formatMetricCurrency(88), formatMetricCurrency(132)] },
+        { revenue: 36000, orders: 450, wrongs: [formatMetricCurrency(60), formatMetricCurrency(90), formatMetricCurrency(120)] },
+    ];
+    aovScenarios.forEach((scenario) => {
+        questionBank.push(
+            createMetricBlitzQuestion(
+                `Revenue = ${formatMetricCurrency(scenario.revenue)} and orders = ${scenario.orders}. What is AOV?`,
+                formatMetricCurrency(scenario.revenue / scenario.orders),
+                scenario.wrongs,
+            ),
+        );
+    });
+
+    const cacScenarios = [
+        { spend: 16000, customers: 400, wrongs: [formatMetricCurrency(20), formatMetricCurrency(60), formatMetricCurrency(80)] },
+        { spend: 27500, customers: 550, wrongs: [formatMetricCurrency(25), formatMetricCurrency(40), formatMetricCurrency(75)] },
+        { spend: 36000, customers: 600, wrongs: [formatMetricCurrency(30), formatMetricCurrency(45), formatMetricCurrency(90)] },
+        { spend: 19200, customers: 320, wrongs: [formatMetricCurrency(24), formatMetricCurrency(40), formatMetricCurrency(72)] },
+        { spend: 45000, customers: 900, wrongs: [formatMetricCurrency(25), formatMetricCurrency(60), formatMetricCurrency(100)] },
+        { spend: 13200, customers: 220, wrongs: [formatMetricCurrency(30), formatMetricCurrency(44), formatMetricCurrency(88)] },
+        { spend: 24800, customers: 620, wrongs: [formatMetricCurrency(20), formatMetricCurrency(31), formatMetricCurrency(62)] },
+        { spend: 31500, customers: 700, wrongs: [formatMetricCurrency(30), formatMetricCurrency(52), formatMetricCurrency(90)] },
+        { spend: 54000, customers: 1200, wrongs: [formatMetricCurrency(25), formatMetricCurrency(36), formatMetricCurrency(72)] },
+        { spend: 8400, customers: 140, wrongs: [formatMetricCurrency(24), formatMetricCurrency(36), formatMetricCurrency(84)] },
+    ];
+    cacScenarios.forEach((scenario) => {
+        questionBank.push(
+            createMetricBlitzQuestion(
+                `Paid marketing spend = ${formatMetricCurrency(scenario.spend)} and new customers = ${scenario.customers}. What is CAC?`,
+                formatMetricCurrency(scenario.spend / scenario.customers),
+                scenario.wrongs,
+            ),
+        );
+    });
+
+    const ctrScenarios = [
+        { clicks: 240, impressions: 8000, wrongs: [formatMetricPercent(1.5), formatMetricPercent(4.8), formatMetricPercent(8)] },
+        { clicks: 325, impressions: 6500, wrongs: [formatMetricPercent(2.5), formatMetricPercent(6.5), formatMetricPercent(10)] },
+        { clicks: 96, impressions: 3200, wrongs: [formatMetricPercent(1.2), formatMetricPercent(4.5), formatMetricPercent(9.6)] },
+        { clicks: 510, impressions: 17000, wrongs: [formatMetricPercent(1.7), formatMetricPercent(5.1), formatMetricPercent(8.5)] },
+        { clicks: 420, impressions: 12000, wrongs: [formatMetricPercent(2.1), formatMetricPercent(4.2), formatMetricPercent(7)] },
+        { clicks: 180, impressions: 4500, wrongs: [formatMetricPercent(2), formatMetricPercent(6), formatMetricPercent(9)] },
+        { clicks: 275, impressions: 11000, wrongs: [formatMetricPercent(1.4), formatMetricPercent(5), formatMetricPercent(11)] },
+        { clicks: 840, impressions: 24000, wrongs: [formatMetricPercent(2.1), formatMetricPercent(4.2), formatMetricPercent(8.4)] },
+        { clicks: 150, impressions: 3750, wrongs: [formatMetricPercent(2.5), formatMetricPercent(5), formatMetricPercent(7.5)] },
+        { clicks: 660, impressions: 22000, wrongs: [formatMetricPercent(1.8), formatMetricPercent(4.4), formatMetricPercent(6.6)] },
+    ];
+    ctrScenarios.forEach((scenario) => {
+        questionBank.push(
+            createMetricBlitzQuestion(
+                `A campaign generated ${scenario.clicks} clicks from ${scenario.impressions.toLocaleString("en-US")} impressions. What is CTR?`,
+                formatMetricPercent((scenario.clicks / scenario.impressions) * 100),
+                scenario.wrongs,
+            ),
+        );
+    });
+
+    const metricConceptQuestions = [
+        { q: "Which metric is usually called a north-star metric?", correct: "A single metric that best captures delivered customer value", wrongs: ["The metric with the biggest weekly variance", "The first metric a dashboard shows", "Any revenue metric chosen by finance"] },
+        { q: "Activation usually measures:", correct: "Whether a new user reached the first meaningful value moment", wrongs: ["Whether the user accepted cookies", "Whether the user upgraded to annual billing", "Whether the user opened the app at least once"] },
+        { q: "Day-30 retention is best defined as:", correct: "Users active on day 30 divided by users who joined that cohort", wrongs: ["Sessions on day 30 divided by all sessions", "Revenue on day 30 divided by day-1 revenue", "New users on day 30 divided by all users"] },
+        { q: "Churn rate answers the question:", correct: "What share of customers stopped being active or paying", wrongs: ["How fast customer support answered tickets", "How many orders shipped late", "How many visitors bounced from landing pages"] },
+        { q: "Bounce rate on a landing page is:", correct: "Single-page visits divided by total visits", wrongs: ["Exits divided by sessions with two or more pages", "Clicks divided by impressions", "Conversions divided by visits"] },
+        { q: "GMV stands for:", correct: "Gross merchandise value", wrongs: ["General market valuation", "Gross margin variance", "Growth monetisation volume"] },
+        { q: "ARPPU is most useful for:", correct: "Understanding revenue per paying user", wrongs: ["Tracking revenue per employee", "Tracking revenue per product page", "Measuring revenue after refunds only"] },
+        { q: "Gross margin tells you:", correct: "How much revenue remains after direct cost of goods sold", wrongs: ["How much cash is in the bank", "How much revenue was collected this week", "How much paid spend was allocated to channels"] },
+        { q: "A leading indicator is:", correct: "A metric that moves before the business outcome you care about", wrongs: ["A metric shown first in the dashboard", "A metric owned by leadership", "A metric that only finance can change"] },
+        { q: "A lagging indicator is:", correct: "A metric that confirms performance after the fact", wrongs: ["A metric that loads slowly", "A metric with bad data quality", "A metric that is not statistically significant"] },
+        { q: "Cohort analysis helps you compare:", correct: "Groups of users who started in the same period or share the same trait", wrongs: ["All metrics from different tools merged together", "Only customers who paid in cash", "Only users who visited more than once"] },
+        { q: "A conversion funnel is used to:", correct: "Find where users drop off between key steps", wrongs: ["Forecast server uptime", "Estimate engineering velocity", "Compare all marketing channels at once without ordering"] },
+        { q: "DAU / MAU is often used as a proxy for:", correct: "Stickiness", wrongs: ["Profitability", "Gross margin", "Infrastructure efficiency"] },
+        { q: "NPS is calculated as:", correct: "% promoters minus % detractors", wrongs: ["% promoters divided by % passives", "% passives minus % detractors", "Promoters divided by all survey responses"] },
+        { q: "LTV is meant to estimate:", correct: "The value a customer generates over their lifetime", wrongs: ["The last transaction value", "The value of one average order", "The total value of unpaid invoices"] },
+        { q: "Payback period for CAC means:", correct: "How long it takes contribution margin to recover acquisition cost", wrongs: ["How long a refund takes to process", "How quickly support closes a ticket", "How soon a new feature ships after design sign-off"] },
+        { q: "Incremental lift is:", correct: "The extra outcome caused by the intervention versus control", wrongs: ["The total outcome observed after a launch", "The average week-over-week growth rate", "The difference between revenue and margin"] },
+        { q: "A vanity metric is dangerous because it:", correct: "Looks impressive without reflecting meaningful business value", wrongs: ["Always declines over time", "Can only be calculated monthly", "Requires too many SQL joins"] },
+        { q: "Segmentation is useful because it:", correct: "Shows whether different user groups behave differently", wrongs: ["Replaces the need for experimentation", "Removes seasonality from time series", "Guarantees higher conversion"] },
+        { q: "A guardrail metric should:", correct: "Protect the business from negative side effects while you optimize a target metric", wrongs: ["Always be the same as the primary KPI", "Only be viewed after the experiment ends", "Be ignored if the main metric improves"] },
+    ];
+    metricConceptQuestions.forEach((item) => {
+        questionBank.push(createMetricBlitzQuestion(item.q, item.correct, item.wrongs));
+    });
+
+    const sqlConceptQuestions = [
+        { q: "Which window function ranks ties without gaps?", correct: "DENSE_RANK()", wrongs: ["RANK()", "ROW_NUMBER()", "NTILE(1)"] },
+        { q: "Use `HAVING` when you need to:", correct: "Filter aggregated results after `GROUP BY`", wrongs: ["Filter rows before grouping", "Sort the final result", "Rename an aggregate column"] },
+        { q: "A `LEFT JOIN` keeps:", correct: "All rows from the left table and matched rows from the right", wrongs: ["Only rows with matches in both tables", "All rows from the right table only", "Only rows where both sides are null"] },
+        { q: "What does `COALESCE(a, b, c)` return?", correct: "The first non-null value in the list", wrongs: ["The average of the values", "The largest non-zero value", "Only the final argument if all are present"] },
+        { q: "Why would you use `UNION ALL` instead of `UNION`?", correct: "To keep duplicates and avoid the de-duplication step", wrongs: ["To sort the combined result automatically", "To join on all matching keys", "To force null values to zero"] },
+        { q: "What does `ROW_NUMBER()` guarantee within each partition?", correct: "A unique sequential number for each row", wrongs: ["The same rank for ties", "No gaps when values tie", "A percentile value from 0 to 1"] },
+        { q: "Which clause controls how rows are grouped before aggregation?", correct: "`GROUP BY`", wrongs: ["`ORDER BY`", "`HAVING`", "`PARTITION BY`"] },
+        { q: "An `INNER JOIN` returns:", correct: "Only rows with matches in both tables", wrongs: ["All rows from the left table", "All rows from both tables regardless of match", "Only rows with null keys"] },
+        { q: "A `CASE WHEN` expression is useful for:", correct: "Creating conditional logic inside a query", wrongs: ["Declaring indexes", "Merging duplicate tables", "Changing the database collation"] },
+        { q: "If you want the top 3 rows per category, what is a common approach?", correct: "Use `ROW_NUMBER()` in a partition and filter ranks <= 3", wrongs: ["Use `LIMIT 3` once at the end", "Use `COUNT(*)` in the `WHERE` clause", "Use `UNION ALL` across categories"] },
+        { q: "Which function counts only non-null values in a column?", correct: "`COUNT(column_name)`", wrongs: ["`COUNT(*)`", "`SUM(column_name)`", "`ROW_COUNT(column_name)`"] },
+        { q: "What is the main purpose of a CTE?", correct: "To structure complex logic into named query blocks", wrongs: ["To permanently store a table", "To replace all indexes", "To auto-cache a result forever"] },
+        { q: "If you need one row per customer after duplicates, you would typically use:", correct: "A de-duplication rule such as `ROW_NUMBER()` over customer ID", wrongs: ["`UNION ALL`", "`COUNT(*)` only", "`CROSS JOIN`"] },
+        { q: "Which join is most likely to explode row counts if used carelessly?", correct: "`CROSS JOIN`", wrongs: ["`LEFT JOIN`", "`INNER JOIN`", "`SELF JOIN`"] },
+        { q: "What does `ORDER BY 1 DESC` mean?", correct: "Sort by the first selected column in descending order", wrongs: ["Sort by one row only", "Sort by the first table in the query", "Sort by the primary key automatically"] },
+        { q: "A null-safe way to avoid division-by-zero is often:", correct: "Divide by `NULLIF(denominator, 0)`", wrongs: ["Wrap the numerator in `COUNT(*)`", "Use `UNION` instead of division", "Add `ORDER BY` before the division"] },
+        { q: "Window functions are evaluated:", correct: "Across a set of related rows without collapsing them into one row", wrongs: ["Only after the final `LIMIT`", "Only inside `JOIN` conditions", "Only on temporary tables"] },
+        { q: "If you need the previous row's value, which function is most common?", correct: "`LAG()`", wrongs: ["`LEAD()`", "`FIRST_VALUE()`", "`NTILE()`"] },
+        { q: "Why might `SUM(revenue) / COUNT(DISTINCT user_id)` be preferred over averaging user-level totals directly?", correct: "It computes revenue per unique user from the chosen grain", wrongs: ["It removes all nulls automatically from every column", "It guarantees the highest possible precision", "It converts revenue to margin"] },
+        { q: "What is usually the first thing to check when a join duplicates your metrics?", correct: "Whether the join keys are one-to-many instead of one-to-one", wrongs: ["Whether the query has enough comments", "Whether the result is ordered alphabetically", "Whether the table names are singular"] },
+    ];
+    sqlConceptQuestions.forEach((item) => {
+        questionBank.push(createMetricBlitzQuestion(item.q, item.correct, item.wrongs));
+    });
+
+    const experimentQuestions = [
+        { q: "A p-value of 0.03 with alpha = 0.05 means:", correct: "The result is statistically significant at the 5% level", wrongs: ["The null hypothesis is proven true", "The effect size is definitely large", "The sample is too small to conclude anything"] },
+        { q: "A Type I error means:", correct: "You concluded there was an effect when there was not one", wrongs: ["You missed a real effect", "You randomized traffic incorrectly", "You measured the wrong KPI"] },
+        { q: "Statistical power is the probability of:", correct: "Detecting a true effect when it exists", wrongs: ["Avoiding every false positive", "Choosing the best variant every time", "Keeping sample size as small as possible"] },
+        { q: "A holdout group is used to:", correct: "Keep a comparable baseline untouched by the treatment", wrongs: ["Increase the p-value", "Speed up significance", "Remove all seasonality from the product"] },
+        { q: "Randomization matters because it:", correct: "Helps balance known and unknown factors across variants", wrongs: ["Guarantees zero churn during the test", "Lets you skip metric definitions", "Makes every sample representative of every country"] },
+        { q: "The primary metric in an experiment should be:", correct: "The main outcome tied to the decision you want to make", wrongs: ["Any metric that moves the most", "The easiest metric to query", "A metric added only after the test ends"] },
+        { q: "A guardrail metric is important because it:", correct: "Catches harmful trade-offs while a target metric improves", wrongs: ["Always replaces the primary metric", "Makes significance unnecessary", "Should only be checked if the test loses"] },
+        { q: "Peeking is risky because it:", correct: "Inflates false-positive risk if you keep checking without a valid stopping rule", wrongs: ["Reduces the sample size requirement", "Guarantees a smaller confidence interval", "Makes control better than treatment"] },
+        { q: "If a confidence interval for uplift includes zero, the safest read is:", correct: "The effect is not yet distinguishable from no effect", wrongs: ["The treatment definitely hurts the metric", "The effect is significant but small", "The sample is perfectly balanced"] },
+        { q: "Sample ratio mismatch means:", correct: "Traffic split is materially different from the intended allocation", wrongs: ["The experiment ran on too many days", "The confidence interval is too wide", "The control group had more returning users only"] },
+        { q: "Novelty effect refers to:", correct: "Users reacting to a change because it is new, not necessarily better long term", wrongs: ["A metric using a new SQL query", "A data delay after deployment", "A higher variance caused by weekends"] },
+        { q: "Minimum detectable effect helps you decide:", correct: "What effect size is worth designing the test to reliably detect", wrongs: ["Which variant will win before launch", "How to avoid defining success criteria", "Which SQL function to use for aggregation"] },
+        { q: "A false negative is:", correct: "Missing a real effect that actually exists", wrongs: ["Declaring a fake winner", "Running multiple variants at once", "Analyzing only one segment"] },
+        { q: "Why are pre-registered success criteria useful?", correct: "They reduce post-hoc metric shopping and biased interpretation", wrongs: ["They increase the effect size automatically", "They remove the need for randomization", "They guarantee every test reaches significance"] },
+        { q: "If treatment improves conversion but hurts retention badly, you should:", correct: "Review the decision using both the primary and guardrail metrics", wrongs: ["Ship immediately because conversion won", "Ignore retention because it is lagging", "Re-run until retention disappears"] },
+        { q: "A/A tests are mainly useful for:", correct: "Checking experiment plumbing and false-positive behavior before major launches", wrongs: ["Estimating lifetime value directly", "Calculating ARPU", "Replacing all sample size calculations"] },
+        { q: "Simpson's paradox is a reminder to:", correct: "Look at segment-level behavior because aggregates can reverse the story", wrongs: ["Never trust SQL joins", "Avoid all experiments with more than one metric", "Use only medians instead of means"] },
+        { q: "If treatment wins only for new users but loses badly for existing users, the next best step is:", correct: "Consider a segmented rollout instead of one blanket decision", wrongs: ["Ignore the difference because the total average is enough", "Delete the losing segment from the analysis", "Always choose the control"] },
+        { q: "A long-run holdout can help answer:", correct: "Whether the impact persists after the initial launch period", wrongs: ["Whether p-values are always below 0.05", "Whether SQL queries run faster in production", "Whether users read the release notes"] },
+        { q: "When an experiment is underpowered, you should expect:", correct: "A higher chance of missing meaningful effects", wrongs: ["Guaranteed significance if the test runs longer than a week", "Smaller variance than normal", "Automatic correction for sample imbalance"] },
+    ];
+    experimentQuestions.forEach((item) => {
+        questionBank.push(createMetricBlitzQuestion(item.q, item.correct, item.wrongs));
+    });
+
+    if (questionBank.length !== 100) {
+        console.warn(`Metric Blitz bank expected 100 questions, received ${questionBank.length}`);
+    }
+
+    return questionBank;
+}
+
+/**
  * Initialises the Metric Blitz game — 5 analytics / SQL questions
  * answered in 30 seconds, no backend required.
  */
 function initMetricBlitz() {
-    const QUESTIONS = [
-        {
-            q: "CTR (Click-Through Rate) formula:",
-            opts: ["Conversions / Sessions", "Clicks / Impressions", "Sessions / Users", "Clicks / Conversions"],
-            ans: 1,
-        },
-        {
-            q: "Total MRR = $50,000 · Active users = 2,000. ARPU = ?",
-            opts: ["$10", "$100", "$25", "$40"],
-            ans: 2,
-        },
-        {
-            q: "p-value = 0.03, significance level α = 0.05. The A/B result is:",
-            opts: ["Not significant — fail to reject null", "Statistically significant — reject null", "Needs more data to decide", "Inconclusive — run it longer"],
-            ans: 1,
-        },
-        {
-            q: "Which SQL window function assigns ranks with NO GAPS when there are ties?",
-            opts: ["RANK()", "ROW_NUMBER()", "DENSE_RANK()", "NTILE(1)"],
-            ans: 2,
-        },
-        {
-            q: "Day-30 cohort retention = ?",
-            opts: [
-                "Sessions on day 30 / Day-1 sessions",
-                "Users active on day 30 / Users who joined that cohort",
-                "Revenue on day 30 / Revenue on day 1",
-                "New users on day 30 / All-time users",
-            ],
-            ans: 1,
-        },
-    ];
-
+    const QUESTION_BANK = buildMetricBlitzQuestionBank();
+    const QUESTIONS_PER_ROUND = 5;
     const TOTAL_SECS = 30;
 
     const startBtn  = document.getElementById("mb-start");
@@ -1781,17 +2054,22 @@ function initMetricBlitz() {
     const optsEl    = document.getElementById("mb-options");
     const scoreEl   = document.getElementById("mb-score-line");
     const retryBtn  = document.getElementById("mb-retry");
+    const metricBlitzCard = document.getElementById("metricblitz-card");
     if (!startBtn || !regEl || !playEl || !resEl) return;
 
     let qi = 0, score = 0, secsLeft = TOTAL_SECS;
     let timerId = /** @type {number|null} */ (null);
     let answered = false;
+    let activeQuestions = [];
 
     function startBlitz() {
         qi = 0; score = 0; secsLeft = TOTAL_SECS; answered = false;
+        activeQuestions = pickRandomItems(QUESTION_BANK, QUESTIONS_PER_ROUND);
         regEl.hidden = true;
         resEl.hidden = true;
         playEl.hidden = false;
+        metricBlitzCard?.classList.remove("is-celebrating");
+        scoreEl?.classList.remove("is-win", "is-strong");
         if (timerEl) { timerEl.textContent = `0:${TOTAL_SECS}`; timerEl.classList.remove("mb-hurry"); }
         clearInterval(timerId ?? undefined);
         timerId = window.setInterval(tickTimer, 1000);
@@ -1808,10 +2086,10 @@ function initMetricBlitz() {
     }
 
     function renderMbQuestion() {
-        if (qi >= QUESTIONS.length) { clearInterval(timerId ?? undefined); showMbResults(); return; }
+        if (qi >= activeQuestions.length) { clearInterval(timerId ?? undefined); showMbResults(); return; }
         answered = false;
-        const q = QUESTIONS[qi];
-        if (qnumEl) qnumEl.textContent = `Q${qi + 1} / ${QUESTIONS.length}`;
+        const q = activeQuestions[qi];
+        if (qnumEl) qnumEl.textContent = `Q${qi + 1} / ${activeQuestions.length}`;
         if (qEl)    qEl.textContent = q.q;
         if (optsEl) {
             optsEl.innerHTML = "";
@@ -1833,7 +2111,7 @@ function initMetricBlitz() {
     function pickMbAnswer(chosen) {
         if (answered) return;
         answered = true;
-        const q = QUESTIONS[qi];
+        const q = activeQuestions[qi];
         optsEl?.querySelectorAll(".mb-opt").forEach((btn, idx) => {
             /** @type {HTMLButtonElement} */ (btn).disabled = true;
             if (idx === q.ans) btn.classList.add("mb-correct");
@@ -1847,9 +2125,25 @@ function initMetricBlitz() {
         clearInterval(timerId ?? undefined);
         playEl.hidden = true;
         resEl.hidden  = false;
-        const msgs = ["😅 Keep studying!", "📖 Getting there!", "👍 Decent!", "💡 Sharp!", "🔥 Perfect!"];
-        const msg  = msgs[Math.min(score, msgs.length - 1)];
-        if (scoreEl) scoreEl.textContent = `${score} / ${QUESTIONS.length}  —  ${msg}`;
+        if (!scoreEl) return;
+
+        scoreEl.classList.remove("is-win", "is-strong");
+        if (score === QUESTIONS_PER_ROUND) {
+            scoreEl.textContent = `${score} / ${QUESTIONS_PER_ROUND} — Perfect run. Metric Blitz conquered.`;
+            scoreEl.classList.add("is-win");
+            triggerFunCelebration(metricBlitzCard, { pieces: 30, durationMs: 2300 });
+        } else if (score >= 4) {
+            scoreEl.textContent = `${score} / ${QUESTIONS_PER_ROUND} — Strong round. One more and you clear the blitz.`;
+            scoreEl.classList.add("is-strong");
+        } else if (score === 3) {
+            scoreEl.textContent = `${score} / ${QUESTIONS_PER_ROUND} — Solid pace. You were in the game.`;
+        } else if (score === 2) {
+            scoreEl.textContent = `${score} / ${QUESTIONS_PER_ROUND} — Good start. Try another random set.`;
+        } else if (score === 1) {
+            scoreEl.textContent = `${score} / ${QUESTIONS_PER_ROUND} — One correct. The next set will be different.`;
+        } else {
+            scoreEl.textContent = `0 / ${QUESTIONS_PER_ROUND} — Fresh five-question set waiting. Run it again.`;
+        }
     }
 
     startBtn.addEventListener("click", startBlitz);

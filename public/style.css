@@ -1244,22 +1244,37 @@ body {
 }
 .sql-quiz-pro-card p { color: var(--text-dim); line-height: 1.65; font-size: 0.95rem; }
 
-/* ── Fun games grid ──────────────────────────────────────────── */
-.fun-games-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+/* ── Fun games stack ─────────────────────────────────────────── */
+.fun-games-stack {
+    display: flex;
+    flex-direction: column;
     gap: 24px;
-    margin-top: 40px;
+    margin-top: 28px;
 }
-@media (max-width: 720px) { .fun-games-row { grid-template-columns: 1fr; } }
 
 .fun-game-card {
+    position: relative;
+    overflow: hidden;
     background: var(--bg-alt);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 28px 24px;
     display: flex;
     flex-direction: column;
+    gap: 18px;
+}
+.fun-game-card-feature {
+    padding: 0;
+}
+.fun-game-card-feature .fun-game-intro,
+.fun-game-card-feature .sql-quiz-app {
+    padding: 28px 24px;
+}
+.fun-game-card-feature .fun-game-intro {
+    border-bottom: 1px solid var(--border);
+    background:
+        radial-gradient(circle at top right, rgba(124,106,255,0.18), transparent 34%),
+        linear-gradient(180deg, rgba(124,106,255,0.08), transparent 100%);
 }
 .fun-game-badge {
     display: inline-block;
@@ -1282,8 +1297,80 @@ body {
 .fun-game-desc {
     font-size: 0.875rem;
     color: var(--text-dim);
-    margin: 0 0 20px;
+    margin: 0;
     line-height: 1.5;
+}
+.fun-game-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+.fun-game-meta-block {
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(124,106,255,0.14);
+    background: rgba(124,106,255,0.06);
+}
+.fun-game-meta-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 6px;
+}
+.fun-game-meta-copy {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--text-dim);
+    font-size: 0.88rem;
+}
+.fun-game-card.is-celebrating {
+    border-color: rgba(124,106,255,0.6);
+    box-shadow: 0 24px 60px rgba(124,106,255,0.18);
+}
+.fun-game-card.is-celebrating::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at top left, rgba(255, 215, 104, 0.2), transparent 24%),
+        radial-gradient(circle at top right, rgba(124, 106, 255, 0.22), transparent 26%),
+        linear-gradient(180deg, rgba(124,106,255,0.08), transparent 45%);
+}
+.fun-win-burst {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.fun-win-confetti {
+    position: absolute;
+    top: -12%;
+    width: 10px;
+    height: 18px;
+    border-radius: 999px;
+    opacity: 0;
+    animation: fun-confetti-fall 1800ms ease-in forwards;
+}
+@keyframes fun-confetti-fall {
+    0% {
+        transform: translate3d(0, -24px, 0) rotate(0deg);
+        opacity: 0;
+    }
+    12% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(var(--burst-x, 0), 120%, 0) rotate(380deg);
+        opacity: 0;
+    }
+}
+@media (max-width: 720px) {
+    .fun-game-meta {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ── SQL Word (Wordle) ───────────────────────────────────────── */
@@ -1354,6 +1441,10 @@ body {
     min-height: 1.3em;
     margin-bottom: 10px;
 }
+.sw-message.is-win {
+    color: #ffd76a;
+    font-weight: 700;
+}
 .sw-share-btn { margin: 0 auto; display: block; }
 
 /* ── Metric Blitz ────────────────────────────────────────────── */
@@ -1403,4 +1494,10 @@ body {
     margin: 24px 0 10px;
     text-align: center;
     line-height: 1.4;
+}
+.mb-score-line.is-win {
+    color: #ffd76a;
+}
+.mb-score-line.is-strong {
+    color: var(--accent-2);
 }
