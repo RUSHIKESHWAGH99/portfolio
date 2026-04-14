@@ -893,10 +893,14 @@
                     <div class="fun-game-meta">
                         <div class="fun-game-meta-block">
                             <p class="fun-game-meta-label">How to play</p>
-                            <p class="fun-game-meta-copy">Type a 5-letter word, press Enter, and use the green / yellow / gray hints to narrow it down. There is one shared word per day.</p>
+                            <p class="fun-game-meta-copy">The middle letter is given on your first guess. Type the other four letters, press Enter, and use green / yellow / gray hints. You get one hint per day if you are stuck.</p>
                         </div>
                     </div>
                     <div id="sw-grid" class="sw-grid" role="group" aria-label="Guess grid"></div>
+                    <div class="sw-hint-row">
+                        <button type="button" class="btn-tool secondary" id="sw-hint-btn">Hint</button>
+                    </div>
+                    <p id="sw-hint-text" class="sw-hint-text" hidden aria-live="polite"></p>
                     <div id="sw-keyboard" class="sw-keyboard" aria-label="On-screen keyboard"></div>
                     <p id="sw-message" class="sw-message" aria-live="polite"></p>
                     <button type="button" class="btn-tool secondary sw-share-btn" id="sw-share" hidden>Copy result ↗</button>
@@ -912,7 +916,7 @@
                 <div class="fun-game-card reveal" id="metricblitz-card">
                     <span class="fun-game-badge">Blitz · 30 seconds</span>
                     <h3 class="fun-game-title">Metric Blitz</h3>
-                    <p class="fun-game-desc">A fast KPI and analytics reflex test. Each round randomly picks 5 questions from a 100-question bank, so the challenge feels fresh every time.</p>
+                    <p class="fun-game-desc">A fast KPI and analytics reflex test. Each round serves five fresh multiple-choice questions so every run feels a bit different.</p>
                     <div class="fun-game-meta">
                         <div class="fun-game-meta-block">
                             <p class="fun-game-meta-label">How to play</p>
@@ -955,6 +959,6 @@
         </div>
     </footer>
 
-    <script src="script.js?v=fun8"></script>
+    <script src="script.js?v=fun9"></script>
 </body>
 </html>

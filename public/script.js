@@ -879,6 +879,38 @@ function pickRandomItems(items, count) {
 }
 
 /**
+ * Formats quiz question text so SQL reads one clause per line when it was a single line.
+ *
+ * @param {string} raw
+ * @param {boolean} isPractical
+ * @returns {string}
+ */
+function formatSqlQuestionForDisplay(raw, isPractical) {
+    const normalized = raw.replace(/\r\n/g, "\n").trim();
+    if (/\n/.test(normalized)) {
+        return normalized
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .join("\n");
+    }
+    if (!isPractical) return raw;
+    const oneLine = normalized.replace(/\s+/g, " ").trim();
+    if (!/\bSELECT\b/i.test(oneLine)) return raw;
+    return oneLine
+        .replace(/\s+FROM\s+/gi, "\nFROM ")
+        .replace(/\s+WHERE\s+/gi, "\nWHERE ")
+        .replace(/\s+(LEFT\s+JOIN|RIGHT\s+JOIN|INNER\s+JOIN|FULL\s+JOIN|CROSS\s+JOIN|JOIN)\s+/gi, "\n$1 ")
+        .replace(/\s+ON\s+/gi, "\nON ")
+        .replace(/\s+GROUP\s+BY\s+/gi, "\nGROUP BY ")
+        .replace(/\s+HAVING\s+/gi, "\nHAVING ")
+        .replace(/\s+ORDER\s+BY\s+/gi, "\nORDER BY ")
+        .replace(/\s+LIMIT\s+/gi, "\nLIMIT ")
+        .replace(/\s+UNION\s+/gi, "\nUNION ")
+        .trim();
+}
+
+/**
  * Adds a short congratulations burst on top of a game card.
  *
  * @param {HTMLElement | null} cardEl
@@ -1080,7 +1112,7 @@ function initSqlQuiz() {
 
         const p       = document.createElement("p");
         p.className   = "sql-quiz-q-text sql-quiz-q-code";
-        p.textContent = q.q;
+        p.textContent = formatSqlQuestionForDisplay(q.q, isPractical);
         qWrap.appendChild(p);
 
         const opts = document.createElement("div");
@@ -1581,6 +1613,8 @@ function initSqlWord() {
     const kbEl     = document.getElementById("sw-keyboard");
     const msgEl    = document.getElementById("sw-message");
     const shareBtn = document.getElementById("sw-share");
+    const hintBtn  = document.getElementById("sw-hint-btn");
+    const hintText = document.getElementById("sw-hint-text");
     const keywordleCard = document.getElementById("keywordle-card");
     if (!gridEl || !kbEl || !msgEl) return;
 
@@ -1590,13 +1624,58 @@ function initSqlWord() {
     const dayIndex = Math.max(0, Math.floor((todayMs - epoch.getTime()) / 86400000));
     const TARGET   = WORDS[dayIndex % WORDS.length];
 
-    const ROWS = 6, COLS = 5;
-    let currentRow = 0, currentCol = 0;
+    const ROWS = 6;
+    const COLS = 5;
+    /** Middle column (0-based) — given free on the first guess row. */
+    const SEED_COL = 2;
+
+    let currentRow = 0;
     const board        = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
     const guessResults = /** @type {string[][]} */ ([]);
     const letterStates = /** @type {Record<string,string>} */ ({});
     let done = false;
     let messageTimerId = /** @type {number | null} */ (null);
+
+    const hintStorageKey = `keywordle-hint-${dayIndex}`;
+
+    /**
+     * Column order for typing (row 0 skips the seeded middle letter).
+     *
+     * @param {number} rowIdx
+     * @returns {number[]}
+     */
+    function writableOrder(rowIdx) {
+        return rowIdx === 0 ? [0, 1, 3, 4] : [0, 1, 2, 3, 4];
+    }
+
+    /**
+     * Next empty cell in typing order, or COLS if the row is full.
+     *
+     * @param {number} rowIdx
+     * @returns {number}
+     */
+    function firstEmptyWritable(rowIdx) {
+        for (const c of writableOrder(rowIdx)) {
+            if (!board[rowIdx][c]) return c;
+        }
+        return COLS;
+    }
+
+    /**
+     * Rightmost filled writable cell, excluding the locked seed letter on row 0.
+     *
+     * @param {number} rowIdx
+     * @returns {number}
+     */
+    function lastFilledWritable(rowIdx) {
+        const order = writableOrder(rowIdx);
+        for (let i = order.length - 1; i >= 0; i--) {
+            const c = order[i];
+            if (rowIdx === 0 && c === SEED_COL) continue;
+            if (board[rowIdx][c]) return c;
+        }
+        return -1;
+    }
 
     // Build grid cells
     for (let r = 0; r < ROWS; r++) {
@@ -1652,6 +1731,11 @@ function initSqlWord() {
         }
     }
 
+    // First row: reveal middle letter (same for everyone that day).
+    board[0][SEED_COL] = TARGET[SEED_COL];
+    updateSwCell(0, SEED_COL, TARGET[SEED_COL]);
+    swCell(0, SEED_COL)?.classList.add("sw-seed");
+
     /**
      * Show a transient message.
      * @param {string} text
@@ -1684,17 +1768,22 @@ function initSqlWord() {
     function handleSwKey(key) {
         if (done) return;
         if (key === "⌫" || key === "BACKSPACE") {
-            if (currentCol > 0) {
-                currentCol--;
-                board[currentRow][currentCol] = "";
-                updateSwCell(currentRow, currentCol, "");
+            const last = lastFilledWritable(currentRow);
+            if (last < 0) return;
+            board[currentRow][last] = "";
+            const el = swCell(currentRow, last);
+            if (el) {
+                el.textContent = "";
+                delete el.dataset.letter;
+                el.classList.remove("sw-pop", "sw-correct", "sw-present", "sw-absent");
             }
         } else if (key === "ENTER") {
             submitSwGuess();
-        } else if (/^[A-Z]$/.test(key) && currentCol < COLS) {
-            board[currentRow][currentCol] = key;
-            updateSwCell(currentRow, currentCol, key);
-            currentCol++;
+        } else if (/^[A-Z]$/.test(key)) {
+            const next = firstEmptyWritable(currentRow);
+            if (next >= COLS) return;
+            board[currentRow][next] = key;
+            updateSwCell(currentRow, next, key);
         }
     }
 
@@ -1726,7 +1815,7 @@ function initSqlWord() {
     }
 
     function submitSwGuess() {
-        if (currentCol < COLS) { showSwMsg("Not enough letters"); return; }
+        if (firstEmptyWritable(currentRow) < COLS) { showSwMsg("Not enough letters"); return; }
         const guess  = board[currentRow].join("");
         const result = scoreSwGuess(guess);
         guessResults.push(result);
@@ -1735,7 +1824,10 @@ function initSqlWord() {
         result.forEach((cls, c) => {
             setTimeout(() => {
                 const el = swCell(currentRow, c);
-                if (el) el.classList.add(cls);
+                if (el) {
+                    el.classList.remove("sw-seed");
+                    el.classList.add(cls);
+                }
             }, c * 100);
         });
 
@@ -1769,11 +1861,11 @@ function initSqlWord() {
                     showSwMsg(`The word was ${TARGET}`, 0, false);
                 }
                 if (shareBtn) shareBtn.hidden = false;
+                if (hintBtn) hintBtn.disabled = true;
             }, COLS * 100 + 220);
         }
 
         currentRow++;
-        currentCol = 0;
     }
 
     function refreshSwKeyboard() {
@@ -1783,6 +1875,28 @@ function initSqlWord() {
                 btn.classList.remove("sw-correct", "sw-present", "sw-absent");
                 btn.classList.add(letterStates[k]);
             }
+        });
+    }
+
+    if (hintBtn && hintText) {
+        const savedHint = localStorage.getItem(hintStorageKey);
+        if (savedHint) {
+            hintText.textContent = savedHint;
+            hintText.hidden = false;
+            hintBtn.disabled = true;
+        }
+        hintBtn.addEventListener("click", () => {
+            if (done) return;
+            if (localStorage.getItem(hintStorageKey)) return;
+            const pool = [0, 1, 3, 4];
+            const idx = pool[Math.floor(Math.random() * pool.length)];
+            const letter = TARGET[idx];
+            const msg = `Hint: today's word includes the letter ${letter}.`;
+            localStorage.setItem(hintStorageKey, msg);
+            hintText.textContent = msg;
+            hintText.hidden = false;
+            hintBtn.disabled = true;
+            showSwMsg("Hint revealed.", 2000, false);
         });
     }
 
@@ -1855,7 +1969,7 @@ function formatMetricPercent(value) {
 }
 
 /**
- * Creates the 100-question Metric Blitz bank.
+ * Builds the Metric Blitz question pool used for random rounds.
  *
  * @returns {{ q: string, opts: string[], ans: number }[]}
  */
@@ -2027,10 +2141,6 @@ function buildMetricBlitzQuestionBank() {
     experimentQuestions.forEach((item) => {
         questionBank.push(createMetricBlitzQuestion(item.q, item.correct, item.wrongs));
     });
-
-    if (questionBank.length !== 100) {
-        console.warn(`Metric Blitz bank expected 100 questions, received ${questionBank.length}`);
-    }
 
     return questionBank;
 }

@@ -1087,7 +1087,10 @@ body {
 
 /* ── SQL quiz (Fun tab) ───────────────────────────────────── */
 .sql-quiz-app {
-    max-width: 640px; margin: 0 auto; padding: 8px 0 48px;
+    max-width: min(100%, 920px);
+    margin: 0 auto;
+    padding: 8px 0 48px;
+    width: 100%;
 }
 .sql-quiz-panel {
     border: 1px solid var(--border); border-radius: 16px;
@@ -1181,20 +1184,23 @@ body {
     font-size: 0.82rem;
     margin-top: 8px;
 }
-.sql-quiz-q-wrap { margin-bottom: 24px; }
+.sql-quiz-q-wrap { margin-bottom: 28px; }
 .sql-quiz-q-text {
-    font-size: 1.02rem; line-height: 1.55; margin-bottom: 18px; color: var(--text);
+    font-size: 1.02rem; line-height: 1.6; margin-bottom: 18px; color: var(--text);
 }
 .sql-quiz-q-text.sql-quiz-q-code {
     font-family: var(--mono);
-    font-size: 0.86rem;
-    line-height: 1.6;
+    font-size: 0.88rem;
+    line-height: 1.75;
     white-space: pre-wrap;
     word-break: break-word;
-    padding: 14px 16px;
-    border-radius: 10px;
+    overflow-x: auto;
+    padding: 18px 20px;
+    border-radius: 12px;
     border: 1px solid var(--border);
     background: rgba(0, 0, 0, 0.2);
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
 }
 [data-theme="light"] .sql-quiz-q-text.sql-quiz-q-code {
     background: rgba(0, 0, 0, 0.04);
@@ -1469,6 +1475,31 @@ body {
 .sw-message.is-win {
     color: #ffd76a;
     font-weight: 700;
+}
+.sw-cell.sw-seed {
+    border-style: dashed;
+    border-width: 2px;
+    border-color: rgba(124, 106, 255, 0.65);
+    background: rgba(124, 106, 255, 0.12);
+}
+[data-theme="light"] .sw-cell.sw-seed {
+    border-color: rgba(124, 106, 255, 0.55);
+    background: rgba(124, 106, 255, 0.08);
+}
+.sw-hint-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.sw-hint-text {
+    text-align: center;
+    font-size: 0.86rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin: 0 0 14px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .sw-share-btn { margin: 0 auto; display: block; }
 
