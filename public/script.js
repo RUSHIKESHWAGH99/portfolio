@@ -47,6 +47,57 @@ function showView(name) {
             document.querySelectorAll("#view-fun .reveal").forEach((el) => el.classList.add("visible"));
             applyQuizQueryPrefill();
         });
+        void refreshFunVisitBadge();
+    }
+}
+
+/** Session key: one Fun-tab visit increment per browser session. */
+const FUN_VISIT_SESSION_KEY = "fun_tab_visit_recorded_v1";
+
+/**
+ * Formats the global Fun-tab visit count for the header badge.
+ *
+ * @param {number} n
+ * @returns {string}
+ */
+function formatFunVisitLabel(n) {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M visits`;
+    if (n >= 1000) return `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k visits`;
+    return `${n.toLocaleString("en-US")} ${n === 1 ? "visit" : "visits"}`;
+}
+
+/**
+ * Loads the shared visit counter beside "Fun" and records this session once.
+ */
+async function refreshFunVisitBadge() {
+    const el = document.getElementById("fun-visit-count");
+    if (!el) return;
+
+    try {
+        const r = await fetch(new URL("/api/fun-stats", window.location.origin));
+        const data = await r.json().catch(() => ({}));
+
+        if (!data.ok || data.unavailable) {
+            el.hidden = true;
+            return;
+        }
+
+        if (typeof data.count === "number") {
+            el.textContent = formatFunVisitLabel(data.count);
+            el.hidden = false;
+        }
+
+        if (sessionStorage.getItem(FUN_VISIT_SESSION_KEY)) return;
+
+        sessionStorage.setItem(FUN_VISIT_SESSION_KEY, "1");
+        const r2 = await fetch(new URL("/api/fun-stats", window.location.origin), { method: "POST" });
+        const data2 = await r2.json().catch(() => ({}));
+        if (data2.ok && typeof data2.count === "number") {
+            el.textContent = formatFunVisitLabel(data2.count);
+            el.hidden = false;
+        }
+    } catch {
+        el.hidden = true;
     }
 }
 
