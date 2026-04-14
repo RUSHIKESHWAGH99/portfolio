@@ -7,6 +7,24 @@ This repo is the source for my personal portfolio — a static site (HTML / CSS 
 
 ---
 
+## GitHub activity
+
+Contribution activity over the **last 90 days** (max supported by the graph API), full width, with the area under the line filled so the chart reads more clearly than the default thin line.
+
+<p align="center">
+  <a href="https://github.com/RUSHIKESHWAGH99" title="Rushikesh Wagh on GitHub">
+    <img
+      src="https://github-readme-activity-graph.vercel.app/graph?username=RUSHIKESHWAGH99&theme=github-compact&area=true&hide_border=true&hide_title=false&days=90&height=320&custom_title=Contribution%20activity"
+      alt="GitHub contribution activity graph"
+      width="100%"
+    />
+  </a>
+</p>
+
+*The graph uses your public contribution timeline (same idea as the green squares on your profile).*
+
+---
+
 ## 🛠️ Free Analytics Tools
 
 > **Tools tab → [rushikeshwagh.vercel.app/#tools](https://rushikeshwagh.vercel.app/#tools)**
