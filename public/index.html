@@ -795,7 +795,7 @@
     <section class="section" id="fun">
         <div class="container">
             <h2 class="section-title reveal">Fun</h2>
-            <p class="section-subtitle reveal">Analytics games for data people — SQL quiz, daily word game &amp; metric blitz.</p>
+            <p class="section-subtitle reveal">Analytics games for data people — The Query Gauntlet, Keywordle, and Metric Blitz.</p>
 
             <div class="fun-games-stack">
                 <div class="fun-game-card fun-game-card-feature reveal" id="querygauntlet-card">
@@ -879,11 +879,17 @@
                     </div>
                 </div>
 
-                <!-- SQL Word — daily Wordle for SQL keywords -->
-                <div class="fun-game-card reveal" id="sqlword-card">
+                <div class="fun-game-divider" role="separator" aria-label="Next game">
+                    <span class="fun-game-divider-line" aria-hidden="true"></span>
+                    <span class="fun-game-divider-mark" aria-hidden="true">◇</span>
+                    <span class="fun-game-divider-line" aria-hidden="true"></span>
+                </div>
+
+                <!-- Keywordle — daily 5-letter SQL / data word -->
+                <div class="fun-game-card reveal" id="keywordle-card">
                     <span class="fun-game-badge">Daily · resets at midnight</span>
-                    <h3 class="fun-game-title">SQL Word</h3>
-                    <p class="fun-game-desc">A quick Wordle-style game for SQL and analytics people. Guess the hidden 5-letter word in 6 tries using the color hints after every attempt.</p>
+                    <h3 class="fun-game-title">Keywordle</h3>
+                    <p class="fun-game-desc">A quick Wordle-style game for SQL and analytics folks. Guess the hidden 5-letter keyword in six tries — green, yellow, and gray hints after every guess.</p>
                     <div class="fun-game-meta">
                         <div class="fun-game-meta-block">
                             <p class="fun-game-meta-label">How to play</p>
@@ -894,6 +900,12 @@
                     <div id="sw-keyboard" class="sw-keyboard" aria-label="On-screen keyboard"></div>
                     <p id="sw-message" class="sw-message" aria-live="polite"></p>
                     <button type="button" class="btn-tool secondary sw-share-btn" id="sw-share" hidden>Copy result ↗</button>
+                </div>
+
+                <div class="fun-game-divider" role="separator" aria-label="Next game">
+                    <span class="fun-game-divider-line" aria-hidden="true"></span>
+                    <span class="fun-game-divider-mark" aria-hidden="true">◇</span>
+                    <span class="fun-game-divider-line" aria-hidden="true"></span>
                 </div>
 
                 <!-- Metric Blitz — 5-question speed round -->
@@ -943,6 +955,6 @@
         </div>
     </footer>
 
-    <script src="script.js?v=fun7"></script>
+    <script src="script.js?v=fun8"></script>
 </body>
 </html>

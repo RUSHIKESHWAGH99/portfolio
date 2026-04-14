@@ -1252,6 +1252,31 @@ body {
     margin-top: 28px;
 }
 
+/* Visual break between separate games in the Fun section */
+.fun-game-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0;
+    padding: 0 8px;
+}
+.fun-game-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(124, 106, 255, 0.45), transparent);
+    border-radius: 999px;
+}
+.fun-game-divider-mark {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: var(--accent);
+    opacity: 0.85;
+    line-height: 1;
+}
+[data-theme="light"] .fun-game-divider-line {
+    background: linear-gradient(90deg, transparent, rgba(124, 106, 255, 0.35), transparent);
+}
+
 .fun-game-card {
     position: relative;
     overflow: hidden;
@@ -1373,7 +1398,7 @@ body {
     }
 }
 
-/* ── SQL Word (Wordle) ───────────────────────────────────────── */
+/* ── Keywordle (Wordle) ──────────────────────────────────────── */
 .sw-grid {
     display: grid;
     grid-template-rows: repeat(6, 50px);

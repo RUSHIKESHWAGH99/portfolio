@@ -1561,10 +1561,10 @@ function initSiteRevisionLabel() {
 }
 
 // ── Boot ────────────────────────────────────────────────────
-// ── SQL Word (daily Wordle for SQL / data keywords) ──────────
+// ── Keywordle (daily Wordle for SQL / data keywords) ─────────
 
 /**
- * Initialises the SQL Word game — a Wordle-style daily word puzzle
+ * Initialises Keywordle — a Wordle-style daily word puzzle
  * using 5-letter SQL and analytics terms. One new word per day.
  */
 function initSqlWord() {
@@ -1581,7 +1581,7 @@ function initSqlWord() {
     const kbEl     = document.getElementById("sw-keyboard");
     const msgEl    = document.getElementById("sw-message");
     const shareBtn = document.getElementById("sw-share");
-    const sqlWordCard = document.getElementById("sqlword-card");
+    const keywordleCard = document.getElementById("keywordle-card");
     if (!gridEl || !kbEl || !msgEl) return;
 
     // Derive today's word from a fixed epoch so everyone shares the same word.
@@ -1754,17 +1754,17 @@ function initSqlWord() {
         if (won || currentRow === ROWS - 1) {
             done = true;
             const msgs = [
-                "Perfect start. You solved today's SQL Word in one shot.",
-                "Excellent. You cracked today's SQL Word in two tries.",
-                "Sharp work. SQL Word solved.",
+                "Perfect start. You solved today's Keywordle in one shot.",
+                "Excellent. You cracked today's Keywordle in two tries.",
+                "Sharp work. Keywordle solved.",
                 "Nice one. You found the word with room to spare.",
                 "Well played. You got there.",
-                "Clutch finish. SQL Word solved on the last row.",
+                "Clutch finish. Keywordle solved on the last row.",
             ];
             setTimeout(() => {
                 if (won) {
                     showSwMsg(msgs[currentRow] || "Correct!", 0, true);
-                    triggerFunCelebration(sqlWordCard, { pieces: 24, durationMs: 2200 });
+                    triggerFunCelebration(keywordleCard, { pieces: 24, durationMs: 2200 });
                 } else {
                     showSwMsg(`The word was ${TARGET}`, 0, false);
                 }
@@ -1807,7 +1807,7 @@ function initSqlWord() {
             const wonRow  = guessResults.findIndex((r) => r.every((s) => s === "sw-correct"));
             const result  = wonRow >= 0 ? `${wonRow + 1}/${ROWS}` : `X/${ROWS}`;
             const word    = String(dayIndex % WORDS.length + 1);
-            const text    = `SQL Word #${word} ${result}\n\n${gridText}\n\nrushikeshwagh.vercel.app/#fun`;
+            const text    = `Keywordle #${word} ${result}\n\n${gridText}\n\nrushikeshwagh.vercel.app/#fun`;
             navigator.clipboard.writeText(text)
                 .then(() => showSwMsg("Copied to clipboard!", 2400, false))
                 .catch(() => showSwMsg("Copy not supported in this browser", 2400, false));
